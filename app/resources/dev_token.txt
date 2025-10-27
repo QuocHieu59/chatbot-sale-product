@@ -1,0 +1,6 @@
+"status": 0,
+"box_id": "dbox001",
+"device_id": "219bd0de-ad1e-11ef-90bf-5ef6a7f3be2b",
+"device_auth_info": {
+    "device_token": "OdSI6kWk/HHpcg5IkDr86RSLkBbLTcerxGu3VpejunvckogBz39xSu9+A19+gAL6ZCo4kSeQpqWW44j2"
+}

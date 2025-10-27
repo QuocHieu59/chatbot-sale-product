@@ -1,0 +1,10 @@
+import os
+PRIVATE_KEY_PATH = os.getenv("JWT_PRIVATE_KEY_PATH")
+PUBLIC_KEY_PATH = os.getenv("JWT_PUBLIC_KEY_PATH")
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+ALGORITHM = "RS256"
+with open(PRIVATE_KEY_PATH, "r") as f:
+    SECRET_KEY = f.read()  
+with open(PUBLIC_KEY_PATH, "r") as f:
+    PUBLIC_KEY = f.read()
