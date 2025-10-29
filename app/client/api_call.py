@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from dotenv import load_dotenv
+from schema.schema import ChatMessage
 import time
 import os
 
@@ -115,13 +116,12 @@ def get_username_by_id(access_token_user):
         st.error("Failed to fetch user data.")
         return None
     
-def send_message():
-        if st.session_state.user_input:
-            user_message = st.session_state.user_input
-            st.session_state.messages.append({"role": "user", "content": user_message})
-            # Clear input field
-            st.session_state.user_input = ""
-        st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": "Đây là câu trả lời giả lập từ trợ lý AI."
-                    })
+def send_message(messages, user_input):
+    # user_message = st.session_state.user_input
+        # st.session_state.user_input = ""
+    messages.append(ChatMessage(type="human", content=user_input))
+        #st.session_state.messages.append(ChatMessage(type="human", content=user_message))            
+    messages.append(ChatMessage(type="ai", content="Đây là câu trả lời giả lập từ trợ lý AI."))
+        #st.session_state.messages.append(ChatMessage(type="ai", content="Đây là câu trả lời giả lập từ trợ lý AI."))
+    # print("3")
+    # print(messages)

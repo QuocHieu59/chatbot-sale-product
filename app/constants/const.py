@@ -8,3 +8,5 @@ with open(PRIVATE_KEY_PATH, "r") as f:
     SECRET_KEY = f.read()  
 with open(PUBLIC_KEY_PATH, "r") as f:
     PUBLIC_KEY = f.read()
+OpenAI_Key = os.getenv("OPENAI_KEY")
+Model_Name = "gpt-4.1-mini"

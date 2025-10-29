@@ -1,4 +1,6 @@
 import streamlit as st
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import logging
 import asyncio
 from page.login import login_page
@@ -6,7 +8,6 @@ from page.register import register_page
 from page.home import home_page
 from api_call import refresh_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS 
 from streamlit_cookies_controller import CookieController
-
 
 APP_TITLE = "Hieu's AI Assistant"
 APP_ICON = "🤖"

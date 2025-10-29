@@ -8,3 +8,6 @@ class BusinessException(Exception):
 class SystemException(Exception):
     """Lỗi hệ thống (DB, mã hóa, ...)."""
     pass
+
+class AgentClientError(Exception):
+    pass

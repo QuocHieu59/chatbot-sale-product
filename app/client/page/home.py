@@ -1,18 +1,18 @@
 import streamlit as st
-from api_call import logout, get_username_by_id, send_message
+from api_call import logout, get_username_by_id, send_message, get_agent_url
+from service.agent_service.clientAgent_service import AgentClient, AgentClientError
+from schema.schema import ChatHistory, ChatMessage
 import streamlit.components.v1 as components
 import uuid
 APP_TITLE = "Hieu's AI Assistant"
 APP_ICON = "🤖"
 
-if "thread_id" not in st.session_state:
-    st.session_state.thread_id = str(uuid.uuid4())
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
-def display_messages():
+def display_messages(messages):
     st.markdown("""
     <style>
     /* Target chính xác container chính */
@@ -28,12 +28,21 @@ def display_messages():
     </style>
     """, unsafe_allow_html=True)
     chat_html = ""
-    for message in st.session_state.messages:
-        role = message["role"]
-        content = message["content"]
+    # messages: list[ChatMessage] = st.session_state.messages
+    
+    # if len(messages) == 0:
+    #     WELCOME = "Hello! I'm a simple chatbot. Ask me anything!"
+    # with st.chat_message("ai"):
+    #     st.write(WELCOME)
+    # if len(messages) == 0:
+    # print("==============")
+    # print(messages)
+    for i, message in enumerate(messages):
+        role = message.type
+        content = message.content
         avatar_url = (
             "https://api.dicebear.com/7.x/bottts/svg?seed=assistant"
-            if role == "assistant"
+            if role == "ai"
             else "https://api.dicebear.com/7.x/personas/svg?seed=user"
         )
         chat_html += f"""
@@ -138,7 +147,30 @@ def confirm_logout(controller):
 def home_page(controller, access_token_user):   
     #username = get_username_by_id(access_token_user)  
     username = "Người dùng"
-    
+    agent_url = get_agent_url()
+    if "agent_client" not in st.session_state: 
+        try:
+            with st.spinner("Đang tải trang..."):
+                st.session_state.agent_client = AgentClient(base_url=agent_url)
+        except AgentClientError as e:
+            st.error(f"Error connecting to agent service at {agent_url}: {e}")
+            st.markdown("The service might be booting up. Try again in a few seconds.")
+            st.stop()
+    agent_client: AgentClient = st.session_state.agent_client
+    if "thread_id" not in st.session_state:
+        thread_id = st.query_params.get("thread_id")
+        if not thread_id:
+            thread_id = str(uuid.uuid4())
+            messages = []
+        else:
+            try:
+                messages: ChatHistory = agent_client.get_history(thread_id=thread_id).messages
+            except AgentClientError:
+                st.error("No message history found for this Thread ID.")
+                messages = []
+        st.session_state.messages = messages
+        st.session_state.thread_id = thread_id
+
     # Sidebar
     with st.sidebar:
         st.session_state.show_confirm_logout = False
@@ -199,15 +231,21 @@ def home_page(controller, access_token_user):
             )
     #end sidebar
     # message main content
-    display_messages()
+    messages: list[ChatMessage] = st.session_state.messages
+    display_messages(messages)
     with st.form(key="chat_form", clear_on_submit=True):
         cols = st.columns([8, 1])  # chia tỷ lệ cột (ô nhập : nút gửi)
         with cols[0]:
-            st.text_input(
+            user_input = st.text_input(
                 "Câu hỏi của bạn:",
                 key="user_input",
                 placeholder="Nhập tin nhắn...",
                 label_visibility="collapsed",  # ẩn nhãn để gọn
             )
         with cols[1]:
-            st.form_submit_button("📨Gửi", on_click=send_message)
+            submitted = st.form_submit_button("📨 Gửi")
+    if submitted and user_input:
+        send_message(messages, user_input)
+        st.rerun()  # bắt buộc rerun lại để hiển thị tin mới
+            
+    
