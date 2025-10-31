@@ -7,12 +7,7 @@ import uuid
 APP_TITLE = "Hieu's AI Assistant"
 APP_ICON = "🤖"
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
-
-def display_messages(messages):
+async def display_messages(messages):
     st.markdown("""
     <style>
     /* Target chính xác container chính */
@@ -25,6 +20,7 @@ def display_messages(messages):
         border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    
     </style>
     """, unsafe_allow_html=True)
     chat_html = ""
@@ -34,7 +30,8 @@ def display_messages(messages):
     #     WELCOME = "Hello! I'm a simple chatbot. Ask me anything!"
     # with st.chat_message("ai"):
     #     st.write(WELCOME)
-    # if len(messages) == 0:
+    if len(messages) == 0:
+        messages.append(ChatMessage(type="ai", content="Tôi sẵn lòng giúp đỡ bạn"))
     # print("==============")
     # print(messages)
     for i, message in enumerate(messages):
@@ -89,11 +86,14 @@ def display_messages(messages):
                 from {{ opacity: 0; transform: translateY(10px); }}
                 to {{ opacity: 1; transform: translateY(0); }}
             }}
-            .chat-message.user {{
+            .chat-message.human {{
                 background-color: #2b313e;
             }}
-            .chat-message.assistant {{
+            .chat-message.ai {{
                 background-color: #475063;
+            }}
+            .chat-message .text {{
+                white-space: pre-line; 
             }}
             .chat-message .message-content {{
                 display: flex;
@@ -144,19 +144,27 @@ def confirm_logout(controller):
         if st.button("❌ Hủy"):
             st.rerun()
 
-def home_page(controller, access_token_user):   
+async def home_page(controller, access_token_user):   
     #username = get_username_by_id(access_token_user)  
     username = "Người dùng"
     agent_url = get_agent_url()
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "user_input" not in st.session_state:
+        st.session_state.user_input = ""
     if "agent_client" not in st.session_state: 
         try:
             with st.spinner("Đang tải trang..."):
                 st.session_state.agent_client = AgentClient(base_url=agent_url)
+                # print("AgentClient type10:", type(st.session_state.agent_client))
         except AgentClientError as e:
             st.error(f"Error connecting to agent service at {agent_url}: {e}")
             st.markdown("The service might be booting up. Try again in a few seconds.")
             st.stop()
-    agent_client: AgentClient = st.session_state.agent_client
+    #print("hello")
+    agent_client = st.session_state.agent_client
+    # print("AgentClient type59:", type(agent_client))
+    # print("Has ainvoke:", hasattr(agent_client, "ainvoke"))
     if "thread_id" not in st.session_state:
         thread_id = st.query_params.get("thread_id")
         if not thread_id:
@@ -229,10 +237,13 @@ def home_page(controller, access_token_user):
             st.write(
                 "Your privacy is important to us. Chat data is only used to improve the service and is never shared with third parties."
             )
+        st.caption(
+            "Made with :material/favorite: by QuocHieu in VietNam"
+        )
     #end sidebar
     # message main content
     messages: list[ChatMessage] = st.session_state.messages
-    display_messages(messages)
+    await display_messages(messages)
     with st.form(key="chat_form", clear_on_submit=True):
         cols = st.columns([8, 1])  # chia tỷ lệ cột (ô nhập : nút gửi)
         with cols[0]:
@@ -245,7 +256,26 @@ def home_page(controller, access_token_user):
         with cols[1]:
             submitted = st.form_submit_button("📨 Gửi")
     if submitted and user_input:
-        send_message(messages, user_input)
-        st.rerun()  # bắt buộc rerun lại để hiển thị tin mới
+        try:
+            messages.append(ChatMessage(type="human", content=user_input))
+            with st.spinner("Đang tạo ra câu trả lời....."):
+                try:
+                    # print("AgentClient type:", type(agent_client))
+                    # print("Has ainvoke:", hasattr(agent_client, "ainvoke"))
+                    response = await agent_client.ainvoke(
+                        message=user_input,
+                        thread_id=st.session_state.thread_id,
+                        #user_id=user_id,
+                    )
+                    # print("cau tra loi")
+                    # print(response)
+                    messages.append(response)
+                    st.rerun()  
+                except AgentClientError as e:
+                    st.error(f"Error generating response: {e}")
+                    st.stop()
+        except Exception as e:
+            st.error(f"Error in chat process: {str(e)}")
+            return
             
     

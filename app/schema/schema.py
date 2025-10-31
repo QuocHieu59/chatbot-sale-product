@@ -1,11 +1,20 @@
 from typing import Any, Literal
+from enum import Enum, auto
+from typing import TypeAlias
 from typing_extensions import NotRequired
 from pydantic import BaseModel, Field, SerializeAsAny
 from typing_extensions import TypedDict
 
+class OpenAIModelName(Enum):
+    GPT_4O_MINI = "gpt-4o-mini"
+    GPT_4O = "gpt-4o"
+
+AllModelEnum: TypeAlias = (
+    OpenAIModelName
+)
+
 class AgentInfo(BaseModel):
     """Info about an available agent."""
-
     key: str = Field(
         description="Agent key.",
         examples=["research-assistant"],
@@ -21,9 +30,15 @@ class ServiceMetadata(BaseModel):
     agents: list[AgentInfo] = Field(
         description="List of available agents.",
     )
+    models: list[AllModelEnum] = Field(
+        description="List of available LLMs.",
+    )
     default_agent: str = Field(
         description="Default agent used when none is specified.",
         examples=["research-assistant"],
+    )
+    default_model: AllModelEnum = Field(
+        description="Default model used when none is specified.",
     )
 
 

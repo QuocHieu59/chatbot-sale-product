@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from controller.router import auth, user
+from controller.router import auth, user, shop, agent
 from fastapi.middleware.cors import CORSMiddleware
 
 # origins = [
@@ -18,3 +18,5 @@ app = FastAPI()
 # )
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(shop.router)
+app.include_router(agent.router)

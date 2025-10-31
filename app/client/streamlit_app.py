@@ -69,9 +69,13 @@ async def main() -> None:
     refresh_access_user = controller.get('refresh_token_user')
     # print("Access token from cookie:", access_token_user)
     # print("Refresh token from cookie:", refresh_access_user)
+    if True:
+        await home_page(controller, None)
+        return
     if access_token_user is None and refresh_access_user is None or refresh_access_user is None:
         #login_page(controller)
-        home_page(controller, None)
+        print('hello1')
+        await home_page(controller, None)
         return
     elif access_token_user is None and refresh_access_user is not None:
         #print("No access token, but refresh token found. Attempting to refresh...")
@@ -92,7 +96,8 @@ async def main() -> None:
     elif current_page == "register":
         register_page()
     elif current_page == "home":
-        home_page(controller, access_token_user.get('access_token'))
+        print('hello2')
+        await home_page(controller, access_token_user.get('access_token'))
     else:
         st.error("404 - Page not found")
         

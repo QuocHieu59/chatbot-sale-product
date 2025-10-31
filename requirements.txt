@@ -2,3 +2,4 @@ bcrypt==3.2.2
 python-jose[cryptography]
 langgraph
 langchain_openai
+langfuse

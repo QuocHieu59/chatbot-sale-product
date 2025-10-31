@@ -42,32 +42,31 @@ class AgentClient:
         self.timeout = timeout
         self.info: ServiceMetadata | None = None
         self.agent: str | None = None
-        # if get_info:
-        #     self.retrieve_info()
-        # if agent:
-        #     self.update_agent(agent)
+        if get_info:
+            self.retrieve_info()
+        if agent:
+           self.update_agent(agent)
 
-    @property
+    #@property
     # def _headers(self) -> dict[str, str]:
     #     headers = {}
     #     if self.auth_secret:
     #         headers["Authorization"] = f"Bearer {self.auth_secret}"
     #     return headers
 
-    # def retrieve_info(self) -> None:
-    #     try:
-    #         response = httpx.get(
-    #             f"{self.base_url}/info",
-    #             headers=self._headers,
-    #             timeout=self.timeout,
-    #         )
-    #         response.raise_for_status()
-    #     except httpx.HTTPError as e:
-    #         raise AgentClientError(f"Error getting service info: {e}")
+    def retrieve_info(self) -> None:
+        try:
+            response = httpx.get(
+                f"{self.base_url}/agents/info",
+                verify=False,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as e:
+            raise AgentClientError(f"Error getting service info: {e}")
 
-    #     self.info = ServiceMetadata.model_validate(response.json())
-    #     if not self.agent or self.agent not in [a.key for a in self.info.agents]:
-    #         self.agent = self.info.default_agent
+        self.info = ServiceMetadata.model_validate(response.json())
+        if not self.agent or self.agent not in [a.key for a in self.info.agents]:
+            self.agent = self.info.default_agent
 
     # def update_agent(self, agent: str, verify: bool = True) -> None:
     #     if verify:
@@ -112,10 +111,10 @@ class AgentClient:
             request.agent_config = agent_config
         if user_id:
             request.user_id = user_id
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 response = await client.post(
-                    f"{self.base_url}/{self.agent}/invoke",
+                    f"{self.base_url}/agents/{self.agent}/invoke",
                     json=request.model_dump(),
                     timeout=self.timeout,
                 )
