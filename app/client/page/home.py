@@ -244,6 +244,10 @@ async def home_page(controller, access_token_user):
     # message main content
     messages: list[ChatMessage] = st.session_state.messages
     await display_messages(messages)
+    if "loading" not in st.session_state:
+        st.session_state.loading = False
+    if "pending_input" not in st.session_state:
+        st.session_state.pending_input = ""
     with st.form(key="chat_form", clear_on_submit=True):
         cols = st.columns([8, 1])  # chia tỷ lệ cột (ô nhập : nút gửi)
         with cols[0]:
@@ -252,30 +256,32 @@ async def home_page(controller, access_token_user):
                 key="user_input",
                 placeholder="Nhập tin nhắn...",
                 label_visibility="collapsed",  # ẩn nhãn để gọn
+                disabled=st.session_state.loading
             )
         with cols[1]:
-            submitted = st.form_submit_button("📨 Gửi")
+            submitted = st.form_submit_button("📨 Gửi", disabled=st.session_state.loading)
+
     if submitted and user_input:
-        try:
-            messages.append(ChatMessage(type="human", content=user_input))
-            with st.spinner("Đang tạo ra câu trả lời....."):
-                try:
-                    # print("AgentClient type:", type(agent_client))
-                    # print("Has ainvoke:", hasattr(agent_client, "ainvoke"))
-                    response = await agent_client.ainvoke(
-                        message=user_input,
-                        thread_id=st.session_state.thread_id,
-                        #user_id=user_id,
-                    )
-                    # print("cau tra loi")
-                    # print(response)
-                    messages.append(response)
-                    st.rerun()  
-                except AgentClientError as e:
-                    st.error(f"Error generating response: {e}")
-                    st.stop()
-        except Exception as e:
-            st.error(f"Error in chat process: {str(e)}")
-            return
+        st.session_state.messages.append(ChatMessage(type="human", content=user_input))
+        st.session_state.pending_input = user_input
+        st.session_state.loading = True
+        st.rerun() 
+
+    if st.session_state.loading:
+        with st.spinner("Đang tạo ra câu trả lời..."):
+            try:
+                response = await agent_client.ainvoke(
+                    message=st.session_state.user_input,
+                    thread_id=st.session_state.thread_id,
+                    #user_id=user_id,
+                )
+                print("câu trả lời:", response)
+                messages.append(response)
+                st.session_state.loading = False
+                st.rerun()  
+            except AgentClientError as e:
+                st.session_state.loading = False
+                st.error(f"Error generating response: {e}")
+                st.stop()
             
     

@@ -1,6 +1,9 @@
 from fastapi import FastAPI
-from controller.router import auth, user, shop, agent
+from controller.router import auth, user, shop, agent, product
 from fastapi.middleware.cors import CORSMiddleware
+from threading import Thread
+import time
+from postgres_events import listen_postgres_events
 
 # origins = [
 #     "http://localhost:8501",  # Streamlit port mặc định
@@ -16,7 +19,14 @@ app = FastAPI()
 #     allow_methods=["*"],
 #     allow_headers=["*"],
 # )
+
+listener_thread = Thread(target=listen_postgres_events, daemon=True)
+listener_thread.start()
+print("🔊 Listener đang chạy... nhấn Ctrl + C để dừng.")
+time.sleep(1)
+
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(shop.router)
 app.include_router(agent.router)
+app.include_router(product.router)

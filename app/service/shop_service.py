@@ -4,7 +4,7 @@ from dto.errors import BusinessException
 
 
 def infShop_service(db: Session):
-    """Business logic for user login."""
+    """Business logic for shop."""
 
     Shops = get_all_shop(db)
     

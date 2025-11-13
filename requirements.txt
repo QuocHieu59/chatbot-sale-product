@@ -3,3 +3,10 @@ python-jose[cryptography]
 langgraph
 langchain_openai
 langfuse
+pandas
+openpyxl
+sqlalchemy
+psycopg2-binary
+chromadb
+python-dotenv
+openai
