@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import numpy as np
 from sqlalchemy import create_engine, text
+import re
 import pandas as pd
 import chromadb
 from openai import OpenAI
@@ -24,7 +25,7 @@ pg_engine = create_engine(DATABASE_URL)
 chroma_client = chromadb.PersistentClient("app/service/agent_service/agents/phone_db")
 
 # --- Tạo collection ---
-#collection = chroma_client.get_or_create_collection(name="phones")
+collection = chroma_client.get_or_create_collection(name="phones")
 def get_embedding(text: str) -> list[float]:
     """Generates an embedding for a given text using OpenAI."""
     response = client.embeddings.create(
@@ -33,44 +34,68 @@ def get_embedding(text: str) -> list[float]:
     )
     return response.data[0].embedding
 
-def rag_context(query: str,  number: int = 3) -> list[str]:
+def rag_context(query: str, number: int = 3) -> list[dict]:
     """
-    Lấy thông tin về 3 sản phẩm có độ tương đồng cao nhất đối với query.    
+    Lấy thông tin về 3 sản phẩm có độ tương đồng cao nhất đối với query.
     Returns:
-        str: Thông tin 3 sản phẩm điện thoại.
+        list[dict]: Mỗi dict chứa 'id' và 'information' của document
     """
-
-    print('----Product', query)
-
-    collection = chroma_client.get_collection(name="phones")
     query_embedding = get_embedding(query)
     query_embedding = query_embedding / np.linalg.norm(query_embedding)
 
-    # Perform vector search
     search_results = collection.query(
-        query_embeddings=query_embedding, 
+        query_embeddings=query_embedding,
         n_results=number
     )
 
+    ids = search_results.get('ids', [])
     metadatas = search_results.get('metadatas', [])
 
     search_result = []
-    i = 0
 
     for i, metadata_list in enumerate(metadatas):
-        if isinstance(metadata_list, list):  # Ensure it's a list
-            for metadata in metadata_list:  # Iterate through all dicts in the list
+        if isinstance(metadata_list, list):
+            for j, metadata in enumerate(metadata_list):
                 if isinstance(metadata, dict):
+                    doc_id = ids[i][j] if ids else None
                     combined_text = metadata.get('information', 'No text available').strip()
-
-                    search_result.append(f"{i}): {combined_text}") 
-                    i += 1
-    print('----result', search_result[0])
+                    search_result.append({
+                        "id": doc_id,
+                        "information": combined_text
+                    })
     return search_result
 
-print(rag_context("nubia red magic 8 pro"))
+def cut_info_before_comma(info_list) -> list[str]:
+    
+    def process_text(text: str) -> str:
+        txt = text.strip()
+        lower = txt.lower()
 
-# # --- Lấy dữ liệu từ PostgreSQL ---
+        # pattern tìm cụm chỉ màu (hỗ trợ một vài biến thể) và bắt khối sau đó đến dấu phẩy tiếp theo (hoặc hết chuỗi)
+        # giải thích ngắn: bắt mọi thứ từ đầu đến phần "có màu..." và các ký tự tiếp theo (non-greedy) trước dấu phẩy tiếp theo
+        color_pattern = re.compile(
+            r'^(.*?có\s*màu(?:\s*sắc)?(?:\s*và\s*số\s*lượng\s*tương\s*ứng)?\s*[:：].*?)(?:,|$)',
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        m = color_pattern.search(txt)
+        if m:
+            return m.group(1).strip()
+
+        # fallback: giữ đến dấu phẩy đầu tiên (như cũ)
+        return txt.split(",", 1)[0].strip()
+
+    # xử lý input là str hoặc list
+    if isinstance(info_list, str):
+        return [process_text(info_list)]
+    else:
+        return [process_text(t) for t in info_list]
+    
+result = rag_context('nubia red magic 8 pr',1)
+
+print(result)
+print(cut_info_before_comma(result[0]['information']))
+# --- Lấy dữ liệu từ PostgreSQL ---
 # def fetch_all_from_table_sqlalchemy(table_name):
 #     """Lấy toàn bộ dữ liệu từ một bảng trong PostgreSQL bằng SQLAlchemy"""
 #     try:
@@ -91,6 +116,24 @@ print(rag_context("nubia red magic 8 pro"))
 #     )
 #     return response.data[0].embedding
 
+# def format_color(color_str):
+#     txt = color_str
+
+#     # Bỏ ký tự [, ], {, }
+#     txt = txt.replace("[", "").replace("]", "")
+#     txt = txt.replace("{", "").replace("}", "")
+
+#     # Bỏ dấu nháy đơn
+#     txt = txt.replace("'", "")
+
+#     # Đổi dấu :  thành " - số lượng "
+#     txt = txt.replace(":", " - số lượng ")
+
+#     # Đổi dấu phẩy phân tách dict thành dấu chấm phẩy
+#     txt = txt.replace(", ", "; ")
+
+#     return txt
+
 # def join_string(item):
 #     for i in range(len(item)):
 #         name, current_price, color_options,network_sp, charge_tech, screen_size, ram, os, chip, memory, pin, sale, status, phone_company, product_specs, product_promotion= item
@@ -101,6 +144,20 @@ print(rag_context("nubia red magic 8 pro"))
 
 #         if current_price:
 #             final_string += f", có giá: {current_price}"
+        
+#         if ram:
+#             final_string += f", RAM: {ram}"
+
+#         if memory:
+#             final_string += f", Bộ nhớ: {memory}"
+        
+#         if color_options:
+#             try:
+#                 result = format_color(color_options)
+#                 final_string += ", Có màu sắc và số lượng tương ứng: " + result
+#             except (ValueError, SyntaxError):
+#                 # color_options không hợp lệ, bỏ qua
+#                 pass
 
 #         if network_sp:
 #             final_string += f", hỗ trợ mạng: {network_sp}G"
@@ -111,17 +168,12 @@ print(rag_context("nubia red magic 8 pro"))
 #         if screen_size:
 #             final_string += f", kích thước màn hình: {screen_size} inch"
         
-#         if ram:
-#             final_string += f", RAM: {ram}"
-        
 #         if os:
 #             final_string += f", Hệ điều hành: {os}"
         
 #         if chip:
 #             final_string += f", chip xử lý: {chip}"
 
-#         if memory:
-#             final_string += f", Bộ nhớ: {memory}"
         
 #         if pin:
 #             final_string += f", Dung lượng Pin: {pin}mAh"
@@ -130,10 +182,8 @@ print(rag_context("nubia red magic 8 pro"))
 #             final_string += f", Đang giảm giá: {sale}%"
 
 #         if status:
-#             if status.lower() == "true":
-#                 final_string += f", Tình trạng: còn hàng"
-#             else :
-#                 final_string +=  f", Tình trạng: hết hàng"
+#             if status.lower() != "true":
+#                 final_string += f", Tình trạng: hết hàng"
         
 #         if phone_company:
 #             final_string += f", Hãng điện thoại: {phone_company}"
@@ -144,16 +194,7 @@ print(rag_context("nubia red magic 8 pro"))
 
 #         if product_specs:
 #             product_specs = product_specs.replace("<br>", " ").replace("\n", " ")
-#             final_string += f" {product_specs}"
-
-#         if color_options:
-#             try:
-#                 color_options = color_options.replace('["', '').replace('"]', '').replace('"-"', ' - ')
-#                 final_string += "có màu sắc: " + color_options
-#             except (ValueError, SyntaxError):
-#                 # color_options không hợp lệ, bỏ qua
-#                 pass
-
+#             final_string += f" {product_specs}."
 
 #     return final_string
 

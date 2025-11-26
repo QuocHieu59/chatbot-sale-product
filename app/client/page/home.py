@@ -268,14 +268,16 @@ async def home_page(controller, access_token_user):
         st.rerun() 
 
     if st.session_state.loading:
+        user_id = "aaf7ac48-c2a3-4928-98e6-bf9c22b1282c"  # Placeholder user ID
         with st.spinner("Đang tạo ra câu trả lời..."):
             try:
+                print("Gửi đến agent:", st.session_state.user_input)
                 response = await agent_client.ainvoke(
                     message=st.session_state.user_input,
                     thread_id=st.session_state.thread_id,
-                    #user_id=user_id,
+                    user_id=user_id,
                 )
-                print("câu trả lời:", response)
+                #print("câu trả lời:", response)
                 messages.append(response)
                 st.session_state.loading = False
                 st.rerun()  

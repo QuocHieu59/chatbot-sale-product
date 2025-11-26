@@ -4,6 +4,7 @@ from typing import Any
 from fastapi.responses import StreamingResponse
 from service.agent_service.agent_service import _sse_response_example, message_generator, _handle_input
 from schema.schema import StreamInput, UserInput, ChatMessage, ServiceMetadata
+from dto.order import current_user_id
 from langchain_core.messages import AIMessage
 from service.agent_service.agent_manager import get_agent, Pregel
 from utils.agent import langchain_to_chat_message
@@ -54,13 +55,17 @@ async def invoke(user_input: UserInput, agent_id: str = DEFAULT_AGENT) -> ChatMe
     # in that case.
     agent: Pregel = get_agent(agent_id)
     kwargs, run_id = await _handle_input(user_input, agent)
-
+    #print("kwargs là", kwargs)
+    current_user_id.set(user_input.user_id)
+    #print("user_input.user_id là", user_input.user_id)
     try:
         response_events: list[tuple[str, Any]] = await agent.ainvoke(**kwargs, stream_mode=["updates", "values"])  # type: ignore # fmt: skip
         response_type, response = response_events[-1]
         if response_type == "values":
             # Normal response, the agent completed successfully
             output = langchain_to_chat_message(response["messages"][-1])
+            # print("kwargs mới là", kwargs)
+            #print("output là", output)
         elif response_type == "updates" and "__interrupt__" in response:
             # The last thing to occur was an interrupt
             # Return the value of the first interrupt as an AIMessage

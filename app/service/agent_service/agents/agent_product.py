@@ -88,36 +88,50 @@ def rag_context(query: str,  number: int = 3) -> list[str]:
     Returns:
         str: Thông tin 3 sản phẩm điện thoại.
     """
-
     print('----Product', query)
+    search_result = []
+    k = 1
+    result = rag_context_ids(query, number)
+    for i in result:
+        search_result.append(f"{k}): {i['information']}") 
+        k += 1
+        print("-----")
+        print(i['information'])
+    return search_result
 
+#print(rag_context('iPhone 14'))
+
+def rag_context_ids(query: str, number: int = 3) -> list[dict]:
+    """
+    Lấy thông tin về 3 sản phẩm có độ tương đồng cao nhất đối với query.
+    Returns:
+        list[dict]: Mỗi dict chứa 'id' và 'information' của document
+    """
     collection = chroma_client.get_collection(name=collection_name)
     query_embedding = get_embedding(query)
     query_embedding = query_embedding / np.linalg.norm(query_embedding)
 
-    # Perform vector search
     search_results = collection.query(
-        query_embeddings=query_embedding, 
+        query_embeddings=query_embedding,
         n_results=number
     )
 
+    ids = search_results.get('ids', [])
     metadatas = search_results.get('metadatas', [])
 
     search_result = []
-    i = 0
 
     for i, metadata_list in enumerate(metadatas):
-        if isinstance(metadata_list, list):  # Ensure it's a list
-            for metadata in metadata_list:  # Iterate through all dicts in the list
+        if isinstance(metadata_list, list):
+            for j, metadata in enumerate(metadata_list):
                 if isinstance(metadata, dict):
+                    doc_id = ids[i][j] if ids else None
                     combined_text = metadata.get('information', 'No text available').strip()
-
-                    search_result.append(f"{i}): {combined_text}") 
-                    i += 1
-    print('----result', search_result[0])
+                    search_result.append({
+                        "id": doc_id,
+                        "information": combined_text
+                    })
     return search_result
-
-#print(rag_context('iPhone 14'))
 
 product_agent = create_react_agent(
                             model=model,

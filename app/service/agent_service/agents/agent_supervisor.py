@@ -5,10 +5,11 @@ from constants.prompts_system import SUPERVISOR_PROMPT
 from constants.const import model
 from service.agent_service.agents.agent_shop import shop_information_agent
 from service.agent_service.agents.agent_product import product_agent
+from service.agent_service.agents.agent_order import order_agent
 
 # Create supervisor agent
 workflow = create_supervisor(
-    agents=[shop_information_agent, product_agent],
+    agents=[shop_information_agent, product_agent, order_agent],
     model=model,
     prompt=SUPERVISOR_PROMPT,
     add_handoff_back_messages=False,

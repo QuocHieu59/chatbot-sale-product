@@ -16,11 +16,11 @@ with open(PUBLIC_KEY_PATH, "r") as f:
     PUBLIC_KEY = f.read()
 OPENAI_KEY = os.getenv("OPENAI_KEY")
 Model_Name = "gpt-4o-mini"
+Model_highcost = "gpt-4o"
 Model_SQL = "gpt-4o"
 Model_embedding = "text-embedding-3-large"
 DEFAULT_AGENT = "supervisor-agent"
 model = ChatOpenAI(
     model=Model_Name,    
     api_key = OPENAI_KEY,
-    streaming=True          
 )

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from controller.router import auth, user, shop, agent, product
+from controller.router import auth, user, shop, agent, product, order
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 import time
@@ -11,7 +11,7 @@ from postgres_events import listen_postgres_events
 #     "https://localhost:8501",  # Streamlit port mặc định
 #     "https://127.0.0.1:8501"
 # ]
-app = FastAPI()
+app = FastAPI(debug=True)
 # app.add_middleware(
 #     CORSMiddleware,
 #     allow_origins=origins,  # URL của Streamlit hoặc client
@@ -30,3 +30,4 @@ app.include_router(user.router)
 app.include_router(shop.router)
 app.include_router(agent.router)
 app.include_router(product.router)
+app.include_router(order.router)
