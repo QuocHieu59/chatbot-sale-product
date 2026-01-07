@@ -21,17 +21,17 @@ class OrderState(BaseModel):
     customer_phone: str | None = None
     customer_address: str | None = None
 
-def verify_product(name_product, ram, memory, color):
+def verify_product(name_product, memory, color):
     
     """
     Kiểm tra xem có tồn tại tên sản phẩm trong cửa hàng
     Returns:
     str: thông tin để trả lời
     """
-    if not name_product or not ram or not memory or not color:
-        return "Vui lòng cung cấp đầy đủ thông tin tên sản phẩm, RAM, bộ nhớ và màu sắc để tôi có thể giúp bạn kiểm tra."
+    if not name_product or not memory or not color:
+        return "Vui lòng cung cấp đầy đủ thông tin tên sản phẩm, bộ nhớ và màu sắc để tôi có thể giúp bạn kiểm tra."
     try:
-        product_info = f"{name_product}, RAM: {ram}, Bộ nhớ: {memory}, Màu sắc: {color}"
+        product_info = f"{name_product}, Bộ nhớ: {memory}, Màu sắc: {color}"
         info1 = rag_context_ids(product_info, 1)
         # print("info1 là", info1[0]['id'])
         # print("state.user_id là", state.user_id)
@@ -48,7 +48,7 @@ def verify_product(name_product, ram, memory, color):
         response = client.chat.completions.create(
             model=Model_highcost, 
             messages=[
-                {"role": "system", "content": "Bạn là một chuyên gia so khớp sản phẩm điện thoại."},
+                {"role": "system", "content": "Bạn là một chuyên gia kiểm tra so khớp sản phẩm điện thoại."},
                 {"role": "user", "content": product_prompt_verify(product_info, info1_process)}
             ],
             temperature=0 
@@ -61,9 +61,9 @@ def verify_product(name_product, ram, memory, color):
         else:
             product = extract_product_info(info1[0]['information'])
             print(product_info)
-            return f"Sản phẩm bạn muốn đặt là {product['name']} với giá {product['price']}, RAM {product['ram']}, bộ nhớ {product['memory']}, và màu {color}. Bạn có muốn đặt mua sản phẩm này không?"
+            return f"Sản phẩm bạn muốn đặt là {product['name']} với giá {product['price']}, bộ nhớ {product['memory']}, và màu {color}. Bạn có muốn đặt mua sản phẩm này không?"
   
-def order_product(name_product, ram, memory, color, phone_number, address, state: OrderState):
+def order_product(name_product, memory, color, phone_number, address, state: OrderState):
     """
     Hàm đặt hàng điện thoại gồm các biến product_information thông tin điện thoại, phone_number: số điện thoại, address: địa chỉ nhận hàng.
     return:
@@ -71,7 +71,7 @@ def order_product(name_product, ram, memory, color, phone_number, address, state
     """
     # info1 = rag_context(product_information, 1)
     # product = extract_product_info(info1)
-    product_info = f"{name_product}, RAM: {ram}, Bộ nhớ: {memory}, Màu sắc: {color}"
+    product_info = f"{name_product}, Bộ nhớ: {memory}, Màu sắc: {color}"
     info1 = rag_context_ids(product_info, 1)
     state.product_name = product_info
     state.id_product = info1[0]['id']

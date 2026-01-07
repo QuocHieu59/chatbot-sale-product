@@ -1,11 +1,18 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+from utils.helper_link import group_last
+from constants.prompts_system import rewrite_prompt
 from api_call import logout, get_username_by_id, send_message, get_agent_url
 from service.agent_service.clientAgent_service import AgentClient, AgentClientError
 from schema.schema import ChatHistory, ChatMessage
 import streamlit.components.v1 as components
 import uuid
-APP_TITLE = "Hieu's AI Assistant"
+APP_TITLE = "Trợ lý AI tư vấn"
 APP_ICON = "🤖"
+load_dotenv()
+OPENAI_KEY = os.getenv("OPENAI_KEY")
 
 async def display_messages(messages):
     st.markdown("""
@@ -152,6 +159,8 @@ async def home_page(controller, access_token_user):
         st.session_state.messages = []
     if "user_input" not in st.session_state:
         st.session_state.user_input = ""
+    if "rewrite_ai" not in st.session_state:
+        st.session_state.rewrite_ai = OpenAI(api_key=OPENAI_KEY)
     if "agent_client" not in st.session_state: 
         try:
             with st.spinner("Đang tải trang..."):
@@ -163,6 +172,7 @@ async def home_page(controller, access_token_user):
             st.stop()
     #print("hello")
     agent_client = st.session_state.agent_client
+    rewrite_ai = st.session_state.rewrite_ai
     # print("AgentClient type59:", type(agent_client))
     # print("Has ainvoke:", hasattr(agent_client, "ainvoke"))
     if "thread_id" not in st.session_state:
@@ -186,20 +196,20 @@ async def home_page(controller, access_token_user):
         col1, col2 = st.columns([1, 1])  # Chia 2 cột: 3 phần text, 1 phần nút
 
         with col1:
-            st.write(f"Welcome, {username}! 👋")
+            st.write(f"Xin chào, {username}! 😊")
 
         with col2:
-            if st.button(":material/logout: Logout", use_container_width=True):
+            if st.button(":material/logout: logout", use_container_width=True):
                 confirm_logout(controller)
-        st.write("Let me be your AI assistant and help you with any questions")
-        if st.button(":material/chat: New Chat", use_container_width=True):
+        st.write("Thông tin được AI hỗ trợ chỉ mang tính chất tham khảo")
+        if st.button(":material/chat: Đoạn chat mới", use_container_width=True):
             try:
                 st.write("Creating a new chat session...")
             except Exception as e:
                 st.error(f"Error creating new chat session: {str(e)}")
                 return
 
-        st.subheader("Chat History")
+        st.subheader("Các đoạn chat của bạn")
         #sessions = get_user_chat_sessions(user_id)
         if True:
             chat_sessions = [f"💬 Chat session #{i+1}" for i in range(30)]
@@ -233,9 +243,9 @@ async def home_page(controller, access_token_user):
             st.markdown(html, unsafe_allow_html=True)
         else:
             st.write("No previous chats")
-        with st.popover(":material/policy: Privacy", use_container_width=True):
+        with st.popover(":material/policy: Chính sách", use_container_width=True):
             st.write(
-                "Your privacy is important to us. Chat data is only used to improve the service and is never shared with third parties."
+                "Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Dữ liệu trò chuyện chỉ được sử dụng để cải thiện dịch vụ và không bao giờ được chia sẻ với bên thứ ba."
             )
         st.caption(
             "Made with :material/favorite: by QuocHieu in VietNam"
@@ -262,18 +272,31 @@ async def home_page(controller, access_token_user):
             submitted = st.form_submit_button("📨 Gửi", disabled=st.session_state.loading)
 
     if submitted and user_input:
+        st.session_state.historychat = group_last(messages)
         st.session_state.messages.append(ChatMessage(type="human", content=user_input))
         st.session_state.pending_input = user_input
         st.session_state.loading = True
+        
         st.rerun() 
 
     if st.session_state.loading:
         user_id = "aaf7ac48-c2a3-4928-98e6-bf9c22b1282c"  # Placeholder user ID
         with st.spinner("Đang tạo ra câu trả lời..."):
             try:
-                print("Gửi đến agent:", st.session_state.user_input)
+                print("Input người dùng:", st.session_state.user_input)
+                # rewrite_message = rewrite_ai.chat.completions.create(
+                #     model="gpt-5-nano", 
+                #     messages=[
+                #         {"role": "system", "content": "Bạn là bộ tiền xử lý câu hỏi cho hệ thống AI tư vấn bán điện thoại. Bạn chỉ có nhiệm vụ viết lại câu hỏi theo yêu cầu."},
+                #         {"role": "user", "content": rewrite_prompt(st.session_state.historychat, st.session_state.user_input)}
+                #     ],
+                   
+                #     )
+                # input_rewrite = rewrite_message.choices[0].message.content.strip()
+                # print("history chat:", st.session_state.historychat)
+                # print("input_rewrite là", input_rewrite)
                 response = await agent_client.ainvoke(
-                    message=st.session_state.user_input,
+                    message=st.session_state.pending_input,
                     thread_id=st.session_state.thread_id,
                     user_id=user_id,
                 )

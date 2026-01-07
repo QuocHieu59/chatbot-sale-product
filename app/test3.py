@@ -17,3 +17,6 @@ workflow = create_supervisor(
 )
 
 supervisor_agent = workflow.compile(checkpointer=MemorySaver(), store=InMemoryStore())
+app = workflow.compile()
+result = app.invoke({"messages": ["So sánh iPhone 14 và iPhone 14 Plus"]})
+print(result)

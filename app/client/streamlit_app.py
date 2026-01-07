@@ -3,15 +3,15 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import logging
 import asyncio
+from PIL import Image
 from page.login import login_page
 from page.register import register_page
 from page.home import home_page
 from api_call import refresh_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS 
 from streamlit_cookies_controller import CookieController
 
-APP_TITLE = "Hieu's AI Assistant"
-APP_ICON = "🤖"
-
+APP_TITLE = "Goluck Store"
+APP_ICON = Image.open("public/mobile-shopping.png")
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ async def main() -> None:
     <style>
     /* Đặt tiêu đề custom lên header mặc định */
     header[data-testid="stHeader"]::after {
-        content: "🚀 Hieu's AI Dashboard";
+        content: "Goluck Store Xin Chào Quý Khách!👋";
         position: absolute;
         font-size: 1.5rem;
         font-weight: 400;

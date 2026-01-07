@@ -9,6 +9,7 @@ def Get_Shop_Info_tool():
     Returns:
         dict: Thông tin chi tiết cửa hàng (tên, địa chỉ, mô tả...).
     """
+    print('----Get_Shop_Info_tool')
     try:
         list_shop = []
         response = requests.get(f"{URL}/shop/inf", verify=False)

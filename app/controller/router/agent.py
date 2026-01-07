@@ -65,7 +65,7 @@ async def invoke(user_input: UserInput, agent_id: str = DEFAULT_AGENT) -> ChatMe
             # Normal response, the agent completed successfully
             output = langchain_to_chat_message(response["messages"][-1])
             # print("kwargs mới là", kwargs)
-            #print("output là", output)
+           # print("output là", output)
         elif response_type == "updates" and "__interrupt__" in response:
             # The last thing to occur was an interrupt
             # Return the value of the first interrupt as an AIMessage
