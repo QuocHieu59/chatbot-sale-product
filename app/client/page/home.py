@@ -9,6 +9,7 @@ from api_call import logout, get_username_by_id, send_message, get_agent_url, ge
 from service.agent_service.clientAgent_service import AgentClient, AgentClientError
 from schema.schema import ChatHistory, ChatMessage
 import streamlit.components.v1 as components
+from page.order_user import order_user_page
 import uuid
 APP_TITLE = "Trợ lý AI tư vấn"
 APP_ICON = "🤖"
@@ -253,6 +254,10 @@ async def home_page(controller, access_token_user):
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.write("Chưa có cuộc trò chuyện nào trước đây")
+        if st.button(":material/shopping_cart: Giỏ Hàng", use_container_width=True):
+            st.query_params.page = "order_user"
+            await order_user_page(controller, access_token_user)
+            st.rerun()
         with st.popover(":material/policy: Chính sách", use_container_width=True):
             st.write(
                 "Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Dữ liệu trò chuyện chỉ được sử dụng để cải thiện dịch vụ và không bao giờ được chia sẻ với bên thứ ba."

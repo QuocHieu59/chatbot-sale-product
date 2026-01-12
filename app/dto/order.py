@@ -1,5 +1,8 @@
+from typing import Optional
 from pydantic import BaseModel
 from contextvars import ContextVar
+from uuid import UUID
+from datetime import datetime
 
 # Lưu user_id cho từng request (an toàn trong async)
 current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
@@ -14,3 +17,22 @@ class OrderRequest(BaseModel):
     color: str
     info: str
 
+class OrderUpdateRequest(BaseModel):
+    order_id: str
+    username: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+class OrderListRequest(BaseModel):
+    id_user: str
+
+class OrderDeleteRequest(BaseModel):
+    order_id: str
+
+class OrderResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    total_amount: int
+    status: str
+    created_at: datetime    
+    class Config:
+        from_attributes = True

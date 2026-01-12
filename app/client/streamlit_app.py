@@ -7,6 +7,7 @@ from PIL import Image
 from page.login import login_page
 from page.register import register_page
 from page.home import home_page
+from page.order_user import order_user_page
 from api_call import refresh_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS 
 from streamlit_cookies_controller import CookieController
 
@@ -65,10 +66,11 @@ async def main() -> None:
         await asyncio.sleep(0.1)
         st.rerun()
     controller = CookieController()
+    
     access_token_user = controller.get('access_token_user')
     refresh_access_user = controller.get('refresh_token_user')
-    # print("Access token from cookie:", access_token_user)
-    # print("Refresh token from cookie:", refresh_access_user)
+    #print("Access token from cookie:", access_token_user)
+    #print("Refresh token from cookie:", refresh_access_user)
     # if True:
     #     await home_page(controller, None)
     #     return
@@ -93,7 +95,7 @@ async def main() -> None:
         else:
             controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
     else:
-        controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
+        controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 4, path='/')
         controller.set('refresh_token_user', refresh_access_user, max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
     params = st.query_params
     current_page = params.get("page", "login")
@@ -103,8 +105,9 @@ async def main() -> None:
     elif current_page == "register":
         register_page()
     elif current_page == "home":
-        print('hello2')
         await home_page(controller, access_token_user.get('access_token'))
+    elif current_page == "order_user":
+        await order_user_page(controller, access_token_user.get('access_token'))
     else:
         st.error("404 - Page not found")
         
