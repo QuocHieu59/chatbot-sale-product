@@ -2,12 +2,52 @@ import streamlit as st
 import requests
 from dotenv import load_dotenv
 from schema.schema import ChatMessage
+from schema.database import ChatSession
+from typing import Optional, List
 from collections.abc import AsyncGenerator
 import time
 import os
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+def get_user_chat_sessions(user_id: str) -> List[ChatSession]:
+    """Get user's chat sessions."""
+    try:
+        response = requests.get( 
+            f"{get_agent_url()}/messages/users/{user_id}/chat-sessions",
+            verify=False
+        )
+        response.raise_for_status()
+        return response.json()["sessions"]
+    except Exception as e:
+        st.error(f"Failed to get chat sessions: {str(e)}")
+        return []
+    
+def get_chat_messages(session_id: str) -> List[ChatMessage]:
+    """Get all messages from a chat session, sorted by sent_at."""
+    try:
+        response = requests.get(f"{get_agent_url()}/messages/chat-sessions/{session_id}/combined-messages", verify=False)
+        response.raise_for_status()
+        combined_messages = response.json()["messages"]
+
+        # Convert to ChatMessage and sort by sent_at
+        chat_messages = []
+        for msg in combined_messages:
+            chat_messages.append(ChatMessage(
+                type=msg["type"],
+                content=msg["content"],
+                run_id=None  # No run_id in combined messages
+            ))
+        # Sort by sent_at if available
+        combined_messages_sorted = sorted(
+            zip(chat_messages, combined_messages),
+            key=lambda x: x[1].get("sent_at") or ""
+        )
+        return [cm[0] for cm in combined_messages_sorted]
+    except Exception as e:
+        st.error(f"Error fetching chat messages: {str(e)}")
+        return []
 
 def get_agent_url() -> str:
     """Get the agent service URL from environment variables."""
@@ -18,8 +58,6 @@ def get_agent_url() -> str:
         port = os.getenv("PORT", 8000)
         agent_url = f"https://{host}:{port}"
     return agent_url
-
-
 
 def login(email, password, controller):
     res = requests.post(f"{get_agent_url()}/auth/login", json={"email": email, "password": password}, verify=False)
@@ -38,7 +76,7 @@ def register(name, email, password, age, repeat_password):
         "password": password,
         "age": age,
         "repeat_password": repeat_password
-    })
+    }, verify=False)
     if res.status_code == 200:
         st.success("✅ Đăng ký thành công! Vui lòng đăng nhập.")
         return True
@@ -112,10 +150,11 @@ def get_username_by_id(access_token_user):
         data = res.json()
         user_data = data.get("data", {})
         username = user_data.get("name", "Người dùng")
-        return username
+        userid = user_data.get("id", "")
+        return username, userid
     else:
         st.error("Failed to fetch user data.")
-        return None
+        return None, None
     
 async def send_message(messages, user_input, agent_client):
     # user_message = st.session_state.user_input

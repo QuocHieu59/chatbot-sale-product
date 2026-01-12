@@ -10,3 +10,4 @@ psycopg2-binary
 chromadb
 python-dotenv
 openai
+passlib==1.7.4

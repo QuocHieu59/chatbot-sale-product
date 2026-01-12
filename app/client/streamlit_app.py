@@ -69,13 +69,20 @@ async def main() -> None:
     refresh_access_user = controller.get('refresh_token_user')
     # print("Access token from cookie:", access_token_user)
     # print("Refresh token from cookie:", refresh_access_user)
-    if True:
-        await home_page(controller, None)
-        return
-    if access_token_user is None and refresh_access_user is None or refresh_access_user is None:
+    # if True:
+    #     await home_page(controller, None)
+    #     return
+    if access_token_user is None and refresh_access_user is None:
+        params = st.query_params
+        current_page = params.get("page", "login")
+        print("Current page:", current_page)
+        if current_page == "register":
+            register_page()
+        else:
+            login_page(controller)
         #login_page(controller)
-        print('hello1')
-        await home_page(controller, None)
+       
+        #await home_page(controller, None)
         return
     elif access_token_user is None and refresh_access_user is not None:
         #print("No access token, but refresh token found. Attempting to refresh...")
@@ -90,7 +97,7 @@ async def main() -> None:
         controller.set('refresh_token_user', refresh_access_user, max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
     params = st.query_params
     current_page = params.get("page", "login")
-    
+    print("Current page:", current_page)
     if current_page == "login":
         login_page(controller)
     elif current_page == "register":

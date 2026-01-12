@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from controller.router import auth, user, shop, agent, product, order
+from controller.router import auth, user, shop, agent, product, order, message
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 import time
@@ -31,3 +31,4 @@ app.include_router(shop.router)
 app.include_router(agent.router)
 app.include_router(product.router)
 app.include_router(order.router)
+app.include_router(message.router)

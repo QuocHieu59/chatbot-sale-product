@@ -17,7 +17,7 @@ def group_last(messages, limit=10):
         elif msg.type == "ai" and current_human:
             pairs.append({"role":"user","content": msg.content})
 
-    print("Các cặp hội thoại gần nhất:", pairs)
+    #print("Các cặp hội thoại gần nhất:", pairs)
 
     # chỉ lấy 5 cặp gần nhất
     return pairs[-limit:]

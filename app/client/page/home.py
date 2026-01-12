@@ -1,10 +1,11 @@
+import requests
 import streamlit as st
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
 from utils.helper_link import group_last
 from constants.prompts_system import rewrite_prompt
-from api_call import logout, get_username_by_id, send_message, get_agent_url
+from api_call import logout, get_username_by_id, send_message, get_agent_url, get_user_chat_sessions, get_chat_messages
 from service.agent_service.clientAgent_service import AgentClient, AgentClientError
 from schema.schema import ChatHistory, ChatMessage
 import streamlit.components.v1 as components
@@ -18,6 +19,10 @@ async def display_messages(messages):
     st.markdown("""
     <style>
     /* Target chính xác container chính */
+    div[data-testid="stMainBlockContainer"] 
+    div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
     div[data-testid="stMainBlockContainer"] {
         width: 100%;
         padding: 1rem 1rem 1rem !important; /* chỉnh lại padding */
@@ -152,13 +157,15 @@ def confirm_logout(controller):
             st.rerun()
 
 async def home_page(controller, access_token_user):   
-    #username = get_username_by_id(access_token_user)  
-    username = "Người dùng"
+    username = get_username_by_id(access_token_user)[0]
+    user_id = get_username_by_id(access_token_user)[1]
     agent_url = get_agent_url()
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "user_input" not in st.session_state:
         st.session_state.user_input = ""
+    if "visible_chat_count" not in st.session_state:
+        st.session_state.visible_chat_count = 5
     if "rewrite_ai" not in st.session_state:
         st.session_state.rewrite_ai = OpenAI(api_key=OPENAI_KEY)
     if "agent_client" not in st.session_state: 
@@ -178,11 +185,13 @@ async def home_page(controller, access_token_user):
     if "thread_id" not in st.session_state:
         thread_id = st.query_params.get("thread_id")
         if not thread_id:
-            thread_id = str(uuid.uuid4())
+            thread_id = ""
+            #thread_id = str(uuid.uuid4())
             messages = []
         else:
             try:
-                messages: ChatHistory = agent_client.get_history(thread_id=thread_id).messages
+                messages = get_chat_messages(thread_id)
+                #messages: ChatHistory = agent_client.get_history(thread_id=thread_id).messages
             except AgentClientError:
                 st.error("No message history found for this Thread ID.")
                 messages = []
@@ -204,45 +213,46 @@ async def home_page(controller, access_token_user):
         st.write("Thông tin được AI hỗ trợ chỉ mang tính chất tham khảo")
         if st.button(":material/chat: Đoạn chat mới", use_container_width=True):
             try:
-                st.write("Creating a new chat session...")
+                # Create new chat session in database
+                session_response = requests.post(
+                    f"{get_agent_url()}/messages/chat-sessions",
+                    json={"user_id": user_id},
+                    verify=False
+                )
+                session_response.raise_for_status()
+                new_session_id = session_response.json()["id"]
+                # Update session state
+                st.session_state.messages = []
+                st.session_state.thread_id = new_session_id
+                st.rerun()
             except Exception as e:
                 st.error(f"Error creating new chat session: {str(e)}")
                 return
 
         st.subheader("Các đoạn chat của bạn")
-        #sessions = get_user_chat_sessions(user_id)
-        if True:
-            chat_sessions = [f"💬 Chat session #{i+1}" for i in range(30)]
+        sessions = get_user_chat_sessions(user_id)
+        if sessions:
+            visible_sessions = sessions[:st.session_state.visible_chat_count] 
 
-            html = r"""
-            <div style="
-                height: 250px;
-                overflow-y: auto;
-                border: 1px solid #555;
-                border-radius: 8px;
-                padding: 4px 8px;
-                margin-bottom: 10px;
-            ">
-            """
+            for chat in visible_sessions:
+                label = f"💬 Chat ID: {str(chat['id'])[:8]}"
+                if chat["id"] == st.session_state.thread_id:
+                    label = "👉 " + label
 
-            for chat in chat_sessions:
-                html += f"""
-            <div style="
-                padding: 6px 8px;
-                margin-bottom: 4px;
-                background-color: rgb(142 138 140 / 44%);
-                border-radius: 6px;
-                cursor: pointer;
-            ">
-                {chat}
-            </div>
-            """
-            html += "</div>"
+                if st.button(label, key=f"chat_{chat['id']}"):
+                    st.session_state.thread_id = str(chat['id'])
+                    # Load messages for this session
+                    messages = get_chat_messages(str(chat['id']))
+                    st.session_state.messages = messages
+                    st.rerun()
+            if st.session_state.visible_chat_count < len(sessions):
+                if st.button("⬇️ Hiển thị thêm"):
+                    st.session_state.visible_chat_count += 5
+                    st.rerun()
 
-            # Dùng markdown
-            st.markdown(html, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
-            st.write("No previous chats")
+            st.write("Chưa có cuộc trò chuyện nào trước đây")
         with st.popover(":material/policy: Chính sách", use_container_width=True):
             st.write(
                 "Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Dữ liệu trò chuyện chỉ được sử dụng để cải thiện dịch vụ và không bao giờ được chia sẻ với bên thứ ba."
@@ -273,6 +283,31 @@ async def home_page(controller, access_token_user):
 
     if submitted and user_input:
         st.session_state.historychat = group_last(messages)
+        #print("history chat lúc gửi:", st.session_state.thread_id)
+        # Create new chat session in database
+        if not st.session_state.thread_id or st.session_state.thread_id == "":
+            session_response = requests.post(
+                f"{get_agent_url()}/messages/chat-sessions",
+                json={"user_id": user_id},
+                verify=False
+            )
+            session_response.raise_for_status()
+            st.session_state.thread_id = session_response.json()["id"]
+            print("Tạo mới thread_id:", st.session_state.thread_id)
+        # Store user message in database
+        print("Gửi message với thread_id:")
+        user_message_response = requests.post(
+                f"{get_agent_url()}/messages/messages",
+                json={
+                    "chat_session_id": str(st.session_state.thread_id),
+                    "sender_id": user_id,
+                    "content": user_input
+                },
+                verify=False
+            )
+        if user_message_response.status_code != 200:
+                st.error(f"Error storing user message: {user_message_response.text}")
+                return
         st.session_state.messages.append(ChatMessage(type="human", content=user_input))
         st.session_state.pending_input = user_input
         st.session_state.loading = True
@@ -280,10 +315,10 @@ async def home_page(controller, access_token_user):
         st.rerun() 
 
     if st.session_state.loading:
-        user_id = "aaf7ac48-c2a3-4928-98e6-bf9c22b1282c"  # Placeholder user ID
+        #user_id = "aaf7ac48-c2a3-4928-98e6-bf9c22b1282c"  # Placeholder user ID
         with st.spinner("Đang tạo ra câu trả lời..."):
             try:
-                print("Input người dùng:", st.session_state.user_input)
+                # print("Input người dùng:", st.session_state.user_input)
                 # rewrite_message = rewrite_ai.chat.completions.create(
                 #     model="gpt-5-nano", 
                 #     messages=[
@@ -301,6 +336,18 @@ async def home_page(controller, access_token_user):
                     user_id=user_id,
                 )
                 #print("câu trả lời:", response)
+                # Store AI message in database
+                ai_message_response = requests.post(
+                    f"{get_agent_url()}/messages/ai-messages",
+                    json={
+                        "chat_session_id": str(st.session_state.thread_id),
+                        "content": response.content
+                    },
+                    verify=False
+                )
+                if ai_message_response.status_code != 200:
+                    st.error(f"Error storing AI message: {ai_message_response.text}")
+                    return
                 messages.append(response)
                 st.session_state.loading = False
                 st.rerun()  
