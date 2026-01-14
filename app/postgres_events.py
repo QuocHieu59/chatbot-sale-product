@@ -1,3 +1,4 @@
+import os
 import psycopg2
 import select
 import pandas as pd
@@ -15,6 +16,18 @@ collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
 pg_engine = create_engine(DATABASE_URL)
 openai_client = OpenAI(api_key=OPENAI_KEY)
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")  
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "chatbot_db")
+
+DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
 def fetch_all_from_table_sqlalchemy(table_name: str) -> pd.DataFrame:
     """Lấy toàn bộ dữ liệu từ PostgreSQL."""
     try:
@@ -27,7 +40,7 @@ def fetch_all_from_table_sqlalchemy(table_name: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 def listen_postgres_events():
-    conn = psycopg2.connect("dbname=chatbot_db user=postgres password=ni456702 host=localhost")
+    conn = psycopg2.connect(f"dbname={POSTGRES_DB} user={POSTGRES_USER} password={POSTGRES_PASSWORD} host={POSTGRES_HOST}")
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
     cur.execute("LISTEN product_changes;")
