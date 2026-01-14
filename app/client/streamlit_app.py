@@ -1,3 +1,4 @@
+from pathlib import Path
 import streamlit as st
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -12,9 +13,10 @@ from page.home import home_page
 from page.order_user import order_user_page
 from api_call import refresh_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS 
 
-
+BASE_DIR = Path(__file__).resolve().parent
+ICON_PATH = BASE_DIR / "public" / "mobile-shopping.png"
 APP_TITLE = "Goluck Store"
-APP_ICON = Image.open("public/mobile-shopping.png")
+APP_ICON = Image.open(ICON_PATH)
 
 logger = logging.getLogger(__name__)
 
