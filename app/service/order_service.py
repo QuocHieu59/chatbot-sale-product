@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from fastapi import Response
 import uuid
+
 from database.models.order import Order
 from database.models.user import User
 from repository.order import create_order

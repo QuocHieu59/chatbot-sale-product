@@ -4,6 +4,7 @@ import logging
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
+
 from database.models.message import ChatSession, Message, AIMessage
 
 logger = logging.getLogger(__name__)

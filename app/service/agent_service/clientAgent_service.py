@@ -1,16 +1,13 @@
 import json
-import os
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
-from dto.errors import AgentClientError
-
 import httpx
 
+from dto.errors import AgentClientError
 from schema.schema import (
     ChatHistory,
     ChatHistoryInput,
     ChatMessage,
-    Feedback,
     ServiceMetadata,
     StreamInput,
     UserInput,

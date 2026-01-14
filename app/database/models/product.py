@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String, DateTime, UUID, Float, Integer, Boolean
 from datetime import datetime
-from database.connection.postgresql import Base
 import uuid
 
+from database.connection.postgresql import Base
 
 class Product(Base):
     __tablename__ = "products"

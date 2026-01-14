@@ -1,16 +1,16 @@
 from langgraph.prebuilt import create_react_agent
 from langchain.tools import tool
-from typing import Any
 import requests as request
+from openai import OpenAI
+from pydantic import BaseModel
+
 from service.agent_service.agents.agent_product import rag_context_ids
 from utils.agent import cutinfo, is_in_stock, extract_product_info
 from constants.const import model, URL
 from dto.order import current_user_id
-
 from constants.prompts_system import ORDER_PROMPT, product_prompt_verify
 from constants.const import OPENAI_KEY, Model_Name, Model_highcost
-from openai import OpenAI
-from pydantic import BaseModel
+
 
 client = OpenAI(api_key=OPENAI_KEY)
 

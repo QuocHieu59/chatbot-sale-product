@@ -4,12 +4,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import logging
 import asyncio
 from PIL import Image
+from streamlit_cookies_controller import CookieController
+
 from page.login import login_page
 from page.register import register_page
 from page.home import home_page
 from page.order_user import order_user_page
 from api_call import refresh_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS 
-from streamlit_cookies_controller import CookieController
+
 
 APP_TITLE = "Goluck Store"
 APP_ICON = Image.open("public/mobile-shopping.png")
@@ -77,7 +79,7 @@ async def main() -> None:
     if access_token_user is None and refresh_access_user is None:
         params = st.query_params
         current_page = params.get("page", "login")
-        print("Current page:", current_page)
+        #print("Current page:", current_page)
         if current_page == "register":
             register_page()
         else:

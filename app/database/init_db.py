@@ -1,5 +1,4 @@
 from connection.postgresql import Base, engine
-from models.user import User
 import logging
 
 # Tạo các bảng trong DB (nếu chưa có)

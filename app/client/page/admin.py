@@ -20,17 +20,66 @@ def confirm_logout(controller):
         if st.button("❌ Hủy"):
             st.rerun()
 
-@st.dialog("Cập nhật đơn hàng")
-def confirm_update_order(order_id, username, customer_phone, customer_address):
-    st.write("Bạn có chắc cập nhật đơn hàng này không?")
+@st.dialog("Xác nhận xóa người dùng")
+def confirm_delete_user(user_id):
+    st.write("Bạn có chắc muốn xóa người dùng này không?")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✅ Xóa"):
+            res = requests.delete(f"{get_agent_url()}/users/admin/delete", json={"user_id": user_id}, verify=False)
+            if res.status_code == 200:
+                st.success("Người dùng đã được xóa!")
+            else:
+                st.error("Xóa người dùng thất bại!")
+            st.rerun()
+    with col2:
+        if st.button("❌ Hủy"):
+            st.rerun()
+
+@st.dialog("Tạo mới người dùng")
+def open_create_user_dialog():
+    st.write("Vui lòng nhập thông tin người dùng")
+
+    name = st.text_input("Tên đăng nhập")
+    email = st.text_input("Email")
+    password = st.text_input("Mật khẩu", type="password")
+    role = st.selectbox("Quyền", ["user", "admin"])
+    age = st.number_input("Tuổi", min_value=0, max_value=100, step=1)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("✅ Tạo"):
+            if not name or not email or not password:
+                st.warning("Vui lòng nhập đầy đủ thông tin")
+                return
+            res = requests.post(f"{get_agent_url()}/users/admin/create", json={
+                            "name": name,
+                            "email": email,
+                            "role": role,
+                            "age": age,
+                            "password": password
+                        }, verify=False)
+            if res.status_code == 200:
+                st.success("Người dùng đã được tạo!")
+            else:
+                st.error("Tạo người dùng thất bại!")
+            st.rerun()
+    with col2:
+        if st.button("❌ Hủy"):
+            st.rerun()
+
+@st.dialog("Cập nhật người dùng")
+def confirm_update_user(user_id, name, email, role, age):
+    st.write("Bạn có chắc cập nhật người dùng này không?")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ Cập nhật"):
-            res = requests.put(f"{get_agent_url()}/orders/update", json={
-                            "order_id": order_id,
-                            "username": username,
-                            "customer_phone": customer_phone,
-                            "customer_address": customer_address
+            res = requests.put(f"{get_agent_url()}/users/admin/update", json={
+                            "id": user_id,
+                            "name": name,
+                            "email": email,
+                            "role": role,
+                            "age": age
                         }, verify=False)
             if res.status_code == 200:
                 st.success("Đơn hàng đã được cập nhật!")
@@ -41,25 +90,8 @@ def confirm_update_order(order_id, username, customer_phone, customer_address):
         if st.button("❌ Hủy"):
             st.rerun()
 
-@st.dialog("Xác nhận xóa đơn hàng")
-def confirm_delete_order(order_id):
-    st.write("Bạn có chắc muốn xóa đơn hàng này không?")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("✅ Xóa"):
-            res = requests.delete(f"{get_agent_url()}/orders/delete", json={"order_id": order_id}, verify=False)
-            if res.status_code == 200:
-                st.success("Đơn hàng đã được xóa!")
-            else:
-                st.error("Xóa đơn hàng thất bại!")
-            st.rerun()
-    with col2:
-        if st.button("❌ Hủy"):
-            st.rerun()
-
-async def order_user_page(controller, access_token_user):  
+async def admin_user_page(controller, access_token_user):  
     username = get_username_by_id(access_token_user)[0]
-    user_id = get_username_by_id(access_token_user)[1]
     # print("User ID in order_user_page:", user_id)
     if "thread_id" not in st.session_state:
         thread_id = st.query_params.get("thread_id")
@@ -75,13 +107,13 @@ async def order_user_page(controller, access_token_user):
         col1, col2 = st.columns([1, 1])  # Chia 2 cột: 3 phần text, 1 phần nút
 
         with col1:
-            st.write(f"Xin chào, {username}! 😊")
+            st.write(f"Xin chào, admin {username}! 😊")
         with col2:
             if st.button(":material/logout: logout",key="logout_button", use_container_width=True):
                 confirm_logout(controller)
         st.write("Thông tin được AI hỗ trợ chỉ mang tính chất tham khảo")
-        if st.button(":material/home: Quay lại", key="back_button", use_container_width=True):
-            st.query_params.page = "home"
+        if st.button(":material/home: Tạo mới người dùng", key="created_user", use_container_width=True):
+            open_create_user_dialog()
             st.rerun()
         with st.popover(":material/policy: Chính sách", use_container_width=True):
             st.write(
@@ -91,8 +123,8 @@ async def order_user_page(controller, access_token_user):
             "Made with :material/favorite: by QuocHieu in VietNam"
         )
     #end sidebar
-    # order main content
-    # ================= ORDER MAIN CONTENT =================
+    # user main content
+    # ================= USER MAIN CONTENT =================
     st.markdown(
         """
         <style>
@@ -114,57 +146,57 @@ async def order_user_page(controller, access_token_user):
         """,
         unsafe_allow_html=True
     )
-    res = requests.get(f"{get_agent_url()}/orders/list", json={"id_user": user_id}, verify=False)
+    res = requests.get(f"{get_agent_url()}/users/admin/list", verify=False)
     result = res.json()
     # print("Order API result:", result)
     if result["success"]:
-        order_list = result["data"] 
+        user_list = result["data"] 
     else:
-        order_list = []
-    st.title("📦 Đơn hàng của bạn")
+        user_list = []
+    st.title("Danh sách người dùng")
 
-    # --- Gọi API lấy danh sách đơn hàng ---
-    # Ví dụ API trả về list các dict
-    # orders = controller.get_orders_by_user(user_id, access_token_user)
-    # <-- tạm thời để trống, bạn thay bằng API thật
+    # --- Gọi API lấy danh sách người dùng ---
 
-    if order_list:
-        st.subheader("Danh sách đơn hàng")
-
+    if user_list:
         # Header bảng
         header_cols = st.columns([1, 3, 2, 2, 2, 2])
-        header_cols[0].markdown("**Mã đơn**")
-        header_cols[1].markdown("**Thông tin sản phẩm**")
+        header_cols[0].markdown("**id**")
+        header_cols[1].markdown("**email**")
         header_cols[2].markdown("**Tên**")
-        header_cols[3].markdown("**SĐT**")
-        header_cols[4].markdown("**Địa chỉ**")
+        header_cols[3].markdown("**Vai trò**")
+        header_cols[4].markdown("**Tuổi**")
         header_cols[5].markdown("**Tùy chọn**")
 
         st.divider()
 
         # Render từng đơn hàng
-        for order in order_list:
+        for user in user_list:
             cols = st.columns([1, 3, 2, 2, 3, 2])
 
-            cols[0].write(str(order.get("id", ""))[:8])
-            cols[1].write(order.get("info", ""))
-            username = cols[2].text_input(
+            cols[0].write(str(user.get("id", ""))[:8])
+            name = cols[1].text_input(
                 label="",
-                value=order.get("username", ""),
-                key=f"username_{order['id']}"
+                value=user.get("name", ""),
+                key=f"name_{user['id']}"
                 )
 
-            customer_phone = cols[3].text_input(
+            email = cols[2].text_input(
                 label="",
-                value=order.get("customer_phone", ""),
-                key=f"phone_{order['id']}"
+                value=user.get("email", ""),
+                key=f"email_{user['id']}"
             )
 
-            customer_address = cols[4].text_input(
+            role = cols[3].text_input(
                 label="",
-                value=order.get("customer_address", ""),
-                key=f"address_{order['id']}",
+                value=user.get("role", ""),
+                key=f"role_{user['id']}",
                
+            )
+
+            age = cols[4].text_input(
+                label="",
+                value=user.get("age", ""),
+                key=f"age_{user['id']}"
             )
 
             with cols[5]:
@@ -173,23 +205,24 @@ async def order_user_page(controller, access_token_user):
                 with btn_col1:
                     if st.button(
                         ":material/edit:",
-                        key=f"update_{order['id']}",
+                        key=f"update_{user['id']}",
                         help="Cập nhật đơn hàng"
                     ):
-                        confirm_update_order(
-                            order["id"],
-                            username,
-                            customer_phone,
-                            customer_address
+                        confirm_update_user(
+                            user["id"],
+                            name,
+                            email,
+                            role,
+                            age
                         )
                     
                 with btn_col2:
                     if st.button(
                         ":material/delete:",
-                        key=f"delete_{order['id']}",
+                        key=f"delete_{user['id']}",
                         help="Xóa đơn hàng"
                     ):
-                        confirm_delete_order(order["id"])
+                        confirm_delete_user(user["id"])
                         #st.session_state.order_action = "delete"
                         
 

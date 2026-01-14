@@ -3,6 +3,7 @@ import logging
 from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
+
 from dto.errors import DatabaseError
 from database.models.user import User
 

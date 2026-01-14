@@ -1,8 +1,8 @@
 from typing import Any, Literal
-from enum import Enum, auto
+from enum import Enum
 from typing import TypeAlias
 from typing_extensions import NotRequired
-from pydantic import BaseModel, Field, SerializeAsAny
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 class OpenAIModelName(Enum):

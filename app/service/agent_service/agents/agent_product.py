@@ -3,14 +3,12 @@ from typing import Dict
 import requests
 from langchain.tools import tool
 import chromadb
-from langchain.agents import create_agent
 from langgraph.prebuilt import create_react_agent
-from sqlalchemy.orm import Session
+
 from openai import OpenAI
 from constants.prompts_system import PRODUCT_PROMPT, product_prompt_classify, prompt_query_PostgreSQL
 from constants.const import model, Model_Name, URL, OPENAI_KEY, COLLECTION_NAME, CHROMA_CLIENT_PATH 
 from utils.agent import cut_info_before_comma, get_embedding
-import os
 
 client = OpenAI(api_key=OPENAI_KEY)
 chroma_client = chromadb.PersistentClient("service/agent_service/agents/phone_db")

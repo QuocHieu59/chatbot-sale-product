@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 import logging
 from sqlalchemy.exc import SQLAlchemyError
-from typing import List, Optional, Any
 from sqlalchemy import text
 import uuid
 import ast
 import json
+
 from dto.errors import DatabaseError
 from database.models.product import Product
 

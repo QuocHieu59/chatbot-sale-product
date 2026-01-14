@@ -1,8 +1,8 @@
 from schema.schema import ChatMessage
 from openai import OpenAI
 import re
-from constants.const import Model_embedding, OPENAI_KEY
 
+from constants.const import Model_embedding, OPENAI_KEY
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,

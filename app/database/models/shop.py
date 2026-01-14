@@ -1,9 +1,8 @@
 from sqlalchemy import Column, String, DateTime, UUID
 from datetime import datetime
-from database.connection.postgresql import Base
 import uuid
 
-
+from database.connection.postgresql import Base
 
 class Shop(Base):
     __tablename__ = "Infshops"

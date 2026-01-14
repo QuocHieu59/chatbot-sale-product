@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from langgraph.pregel import Pregel
-from service.agent_service.agents.agent_supervisor import supervisor_agent
-from schema.schema import AgentInfo
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.pregel import Pregel
-from constants.const import DEFAULT_AGENT
 from abc import ABC, abstractmethod
+
+from constants.const import DEFAULT_AGENT
+from service.agent_service.agents.agent_supervisor import supervisor_agent
+from schema.schema import AgentInfo
 
 # Tạo kiểu agent có khả năng khởi tạo bất đồng bộ (async),
 class LazyLoadingAgent(ABC):

@@ -3,14 +3,13 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+import streamlit.components.v1 as components
+
 from utils.helper_link import group_last
-from constants.prompts_system import rewrite_prompt
 from api_call import logout, get_username_by_id, send_message, get_agent_url, get_user_chat_sessions, get_chat_messages
 from service.agent_service.clientAgent_service import AgentClient, AgentClientError
 from schema.schema import ChatHistory, ChatMessage
-import streamlit.components.v1 as components
 from page.order_user import order_user_page
-import uuid
 APP_TITLE = "Trợ lý AI tư vấn"
 APP_ICON = "🤖"
 load_dotenv()

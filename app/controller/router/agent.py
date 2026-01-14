@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from constants.const import DEFAULT_AGENT
 from typing import Any
 from fastapi.responses import StreamingResponse
+from langchain_core.messages import AIMessage
+
 from service.agent_service.agent_service import _sse_response_example, message_generator, _handle_input
 from schema.schema import StreamInput, UserInput, ChatMessage, ServiceMetadata
 from dto.order import current_user_id
-from langchain_core.messages import AIMessage
 from service.agent_service.agent_manager import get_agent, Pregel
 from utils.agent import langchain_to_chat_message
 from service.agent_service.agent_manager import get_all_agent_info

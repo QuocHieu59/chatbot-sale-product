@@ -1,8 +1,8 @@
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, UUID
+from sqlalchemy import Column, String, DateTime, ForeignKey, UUID
 from datetime import datetime
 import uuid
+
 from database.connection.postgresql import Base
-import uuid
 
 class Order(Base):
     __tablename__ = "orders"

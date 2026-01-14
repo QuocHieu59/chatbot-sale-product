@@ -4,6 +4,7 @@ import pandas as pd
 import chromadb
 from sqlalchemy import create_engine, text
 from openai import OpenAI
+
 from database.connection.postgresql import DATABASE_URL
 from constants.const import OPENAI_KEY, COLLECTION_NAME, CHROMA_CLIENT_PATH
 from utils.hash import get_text_hash

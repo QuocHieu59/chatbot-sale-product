@@ -2,7 +2,9 @@ from sqlalchemy import Column, Text, DateTime, ForeignKey, UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
+
 from database.connection.postgresql import Base
+
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
  

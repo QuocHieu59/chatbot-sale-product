@@ -1,8 +1,8 @@
-import requests
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import AIMessage
 from langchain.tools import tool
 from openai import OpenAI
+
 from constants.const import model, URL, OPENAI_KEY, Model_highcost
 from constants.prompts_system import SUGGEST_PROMPT, prompt_suggestion
 from service.agent_service.agents.agent_product import query_phone
