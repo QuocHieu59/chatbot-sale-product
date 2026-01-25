@@ -66,40 +66,43 @@ async def main() -> None:
     }
     </style>
     """, unsafe_allow_html=True)
-    
+    if "is_logging_out" not in st.session_state:
+        st.session_state.is_logging_out = False
+
     if st.get_option("client.toolbarMode") != "minimal":
         st.set_option("client.toolbarMode", "minimal")
         #await asyncio.sleep(0.1)
-        st.rerun()
+        #st.rerun()
     if "checked_cookie" not in st.session_state:
         st.session_state.checked_cookie = False
+    
+    if st.session_state.get("is_logging_out"):
+        st.query_params.page = "login"
+        st.session_state.checked_cookie = False
+        st.session_state.is_logging_out = False
+        st.stop()
 
     controller = CookieController()
     
     access_token_user = controller.get('access_token_user')
     refresh_access_user = controller.get('refresh_token_user')
+    is_logging_out = st.session_state.get("is_logging_out", False)
     #print("Access token from cookie:", access_token_user)
     #print("Refresh token from cookie:", refresh_access_user)
-    # if True:
-    #     await home_page(controller, None)
-    #     return
-    if not st.session_state.checked_cookie:
-        if access_token_user is None and refresh_access_user is None:
-            st.session_state.checked_cookie = True
-            st.stop()   # ⛔ dừng run đầu tiên
-        st.session_state.checked_cookie = True
+    # if not st.session_state.checked_cookie:
+    #     if access_token_user is None and refresh_access_user is None:
+    #         st.session_state.checked_cookie = True
+    #         st.stop()   # ⛔ dừng run đầu tiên
+    #     st.session_state.checked_cookie = True
     if access_token_user is None and refresh_access_user is None:
         params = st.query_params
         current_page = params.get("page", "login")
-        #print("Current page:", current_page)
-        #print("No tokens found, redirecting to login/register page.")
         if current_page == "register":
             register_page()
         else:
+            print("No tokens found, redirecting to login page.")
             login_page(controller)
-        #login_page(controller)
-       
-        #await home_page(controller, None)
+
         return
     elif access_token_user is None and refresh_access_user is not None:
         #print("No access token, but refresh token found. Attempting to refresh...")
@@ -108,18 +111,21 @@ async def main() -> None:
         #print("Cookie found:", usernameCookie)
             return
         else:
-            controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
+            if not is_logging_out:
+                controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
     else:
-        controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 4, path='/')
-        controller.set('refresh_token_user', refresh_access_user, max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
+        if not is_logging_out:
+            print("Setting cookies again to extend expiry.")
+            controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 4, path='/')
+            controller.set('refresh_token_user', refresh_access_user, max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
+            # controller.remove('access_token_user', path='/')
+            # controller.remove('refresh_token_user', path='/')
+            # print("Cookies after resetting:")
+            # print("access_token_user:", controller.get('access_token_user'))
     params = st.query_params
 
-    # if not params or "page" not in params:
-    #     st.query_params.page = "home"
-    #     st.rerun()
-
     current_page = params.get("page", "login")
-    print("Access token valid:", access_token_user)
+    print("Access token valid:", controller.get('access_token_user'))
     print("Current page:", current_page)
     if current_page == "login":
         login_page(controller)

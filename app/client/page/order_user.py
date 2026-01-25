@@ -15,7 +15,12 @@ def confirm_logout(controller):
         if st.button("✅ Đăng xuất"):
             st.query_params.page = "login"
             logout(controller)
-            st.rerun()
+            st.session_state.is_logging_out = True
+            st.session_state.checked_cookie = False
+            #st.rerun() 
+            st.success("Đã đăng xuất, ấn F5 để tiếp tục.")
+            st.stop()
+            
     with col2:
         if st.button("❌ Hủy"):
             st.rerun()

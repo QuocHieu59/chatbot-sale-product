@@ -64,7 +64,6 @@ def get_agent_url() -> str:
 def login(email, password, controller):
     res = requests.post(f"{get_agent_url()}/auth/login", json={"email": email, "password": password}, verify=False)
     data = res.json()
-    role = data["data"]["user"]["role"]
     if res.status_code == 200:
         st.session_state["logged_in"] = True
         controller.set(
@@ -73,7 +72,7 @@ def login(email, password, controller):
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path='/'
         )
-
+        role = data["data"]["user"]["role"]
         controller.set(
             'refresh_token_user',
             data["data"]["refresh_token"],
@@ -155,13 +154,13 @@ def logout(controller):
     controller.remove('refresh_token_user', path='/')
     print("Logging out, clearing session state...")
     print("access_token_user after removal:", controller.get('access_token_user'))
-    st.session_state.clear() 
+     
     time.sleep(0.1)
-    st.success("Đã đăng xuất.")
+    
     
 
 def get_username_by_id(access_token_user):
-    print("Fetching user data with access token:", access_token_user)
+    #print("Fetching user data with access token:", access_token_user)
     if not access_token_user:
         st.error("No access token provided.")
         return None
@@ -172,7 +171,8 @@ def get_username_by_id(access_token_user):
         user_data = data.get("data", {})
         username = user_data.get("name", "Người dùng")
         userid = user_data.get("id", "")
-        return username, userid
+        userrole = user_data.get("role", "user")
+        return username, userid, userrole
     else:
         st.error("Failed to fetch user data.")
         return None, None

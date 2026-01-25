@@ -16,7 +16,11 @@ def confirm_logout(controller):
         if st.button("✅ Đăng xuất"):
             st.query_params.page = "login"
             logout(controller)
-            st.rerun()
+            st.session_state.is_logging_out = True
+            st.session_state.checked_cookie = False
+            #st.rerun() 
+            st.success("Đã đăng xuất, ấn F5 để tiếp tục.")
+            st.stop()
     with col2:
         if st.button("❌ Hủy"):
             st.rerun()
@@ -93,6 +97,10 @@ def confirm_update_user(user_id, name, email, role, age):
 
 async def admin_user_page(controller, access_token_user):  
     username = get_username_by_id(access_token_user)[0]
+    userrole = get_username_by_id(access_token_user)[2]
+    if userrole != "admin":
+        st.error("Bạn không có quyền truy cập trang này!")
+        st.stop()
     # print("User ID in order_user_page:", user_id)
     # Sidebar
     if "show_create_user" not in st.session_state:
