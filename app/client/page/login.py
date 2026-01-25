@@ -11,10 +11,13 @@ def login_page(controller):
         submitted = st.form_submit_button("Đăng nhập")
 
         if submitted:
-            user = login(email, password, controller)
-            if user:
+            role = login(email, password, controller)
+            if role != "":
                 st.success("Đăng nhập thành công!")
-                st.query_params.page = "home"
+                if role == "user":
+                    st.query_params.page = "home"
+                else:
+                    st.query_params.page = "admin"
                 st.rerun()
             else:
                 st.error("Email hoặc mật khẩu không hợp lệ!")

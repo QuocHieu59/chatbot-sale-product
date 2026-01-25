@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import streamlit.components.v1 as components
+import markdown
 
 from utils.helper_link import group_last
 from api_call import logout, get_username_by_id, send_message, get_agent_url, get_user_chat_sessions, get_chat_messages
@@ -49,6 +50,12 @@ async def display_messages(messages):
     for i, message in enumerate(messages):
         role = message.type
         content = message.content
+        clean_content = content.replace("\n\n", "\n")
+        #content_clean = normalize_markdown(content)
+        html_content = markdown.markdown(
+        clean_content,
+        extensions=["extra", "tables", "fenced_code"]
+        )
         avatar_url = (
             "https://api.dicebear.com/7.x/bottts/svg?seed=assistant"
             if role == "ai"
@@ -58,7 +65,7 @@ async def display_messages(messages):
         <div class="chat-message {role}">
             <div class="message-content">
                 <img class="avatar" src="{avatar_url}">
-                <div class="text">{content}</div>
+                <div class="text markdown-body">{html_content}</div>
             </div>
         </div>
         """
@@ -150,6 +157,9 @@ def confirm_logout(controller):
     with col1:
         if st.button("✅ Đăng xuất"):
             st.query_params.page = "login"
+            controller.remove('access_token_user', path='/')
+            controller.remove('refresh_token_user', path='/')
+            controller.clear()
             logout(controller)
             st.rerun()
     with col2:
@@ -232,7 +242,9 @@ async def home_page(controller, access_token_user):
         st.subheader("Các đoạn chat của bạn")
         sessions = get_user_chat_sessions(user_id)
         if sessions:
-            visible_sessions = sessions[:st.session_state.visible_chat_count] 
+            visible_sessions = list(
+    reversed(sessions[-st.session_state.visible_chat_count:])
+)
 
             for chat in visible_sessions:
                 label = f"💬 Chat ID: {str(chat['id'])[:8]}"
@@ -267,6 +279,7 @@ async def home_page(controller, access_token_user):
     #end sidebar
     # message main content
     messages: list[ChatMessage] = st.session_state.messages
+    print("current messages:", messages)
     await display_messages(messages)
     if "loading" not in st.session_state:
         st.session_state.loading = False

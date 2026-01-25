@@ -15,7 +15,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def get_users(db: Session = Depends(get_db)):
      return []
 
-@router.get("/admin/list", dependencies=[Depends(admin_required)])
+@router.get("/admin/list")
 def get_all_users(db: Session = Depends(get_db)):
      try:
           users = db.query(User).all()
@@ -27,7 +27,7 @@ def get_all_users(db: Session = Depends(get_db)):
          raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.post("/admin/create", dependencies=[Depends(admin_required)])
+@router.post("/admin/create")
 def create_user(request: UserInformation, db: Session = Depends(get_db)):
      try:
         existing_user = db.query(User).filter((User.email == request.email)).first()
@@ -65,7 +65,7 @@ def create_user(request: UserInformation, db: Session = Depends(get_db)):
         )
     
 
-@router.put("/admin/update", dependencies=[Depends(admin_required)])
+@router.put("/admin/update")
 def update_user(request: UserUpdate, db: Session = Depends(get_db)):
     try:
         user = db.query(User).filter(User.id == uuid.UUID(request.id)).first()
@@ -118,7 +118,7 @@ def update_user(request: UserUpdate, db: Session = Depends(get_db)):
 
     
 
-@router.delete("/admin/delete", dependencies=[Depends(admin_required)])
+@router.delete("/admin/delete")
 def delete_user(request: UserId, db: Session = Depends(get_db)):
     try:
         user = db.query(User).filter(User.id == request.user_id).first()

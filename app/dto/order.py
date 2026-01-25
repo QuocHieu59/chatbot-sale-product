@@ -22,6 +22,7 @@ class OrderUpdateRequest(BaseModel):
     username: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_address: Optional[str] = None
+    info: str
 class OrderListRequest(BaseModel):
     id_user: str
 

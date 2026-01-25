@@ -64,12 +64,27 @@ def get_agent_url() -> str:
 def login(email, password, controller):
     res = requests.post(f"{get_agent_url()}/auth/login", json={"email": email, "password": password}, verify=False)
     data = res.json()
+    role = data["data"]["user"]["role"]
     if res.status_code == 200:
-        controller.set('access_token_user', {'access_token': data["data"]["access_token"]},  max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
-        controller.set('refresh_token_user', {'refresh_token': data["data"]["refresh_token"]},  max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
-        return True
+        st.session_state["logged_in"] = True
+        controller.set(
+        'access_token_user',
+        data["data"]["access_token"],
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path='/'
+        )
+
+        controller.set(
+            'refresh_token_user',
+            data["data"]["refresh_token"],
+            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+            path='/'
+        )
+        access_token = controller.get('access_token_user')
+        print("Access token:", access_token)
+        return role
     else:
-        return False
+        return ""
 
 def register(name, email, password, age, repeat_password):
     res = requests.post(f"{get_agent_url()}/auth/register", json={
@@ -93,7 +108,7 @@ def refresh_access_token(refresh_access_user, controller):
     res = requests.get(f"{get_agent_url()}/auth/refresh", json={"refresh_token": refresh_access_user}, verify=False)
     if res.status_code == 200:
         data = res.json()
-        controller.set('access_token_user', {'access_token': data["access_token"]}, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/') 
+        controller.set('access_token_user', data["access_token"], max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/') 
         return True
     else:
         st.warning("Refresh token hết hạn, vui lòng đăng nhập lại.")
@@ -135,14 +150,18 @@ def check_login_status(access_token):
 #         return None
 
 def logout(controller):
+    requests.post(f"{get_agent_url()}/auth/logout", verify=False)
     controller.remove('access_token_user', path='/')
     controller.remove('refresh_token_user', path='/')
+    print("Logging out, clearing session state...")
+    print("access_token_user after removal:", controller.get('access_token_user'))
     st.session_state.clear() 
     time.sleep(0.1)
     st.success("Đã đăng xuất.")
-    requests.post(f"{get_agent_url()}/auth/logout", verify=False)
+    
 
 def get_username_by_id(access_token_user):
+    print("Fetching user data with access token:", access_token_user)
     if not access_token_user:
         st.error("No access token provided.")
         return None

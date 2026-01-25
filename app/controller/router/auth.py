@@ -61,6 +61,12 @@ def get_me(authorization: str = Header(None), db: Session = Depends(get_db)):
 
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    response.delete_cookie(
+        key="access_token_user",
+        path="/"
+    )
+    response.delete_cookie(
+        key="refresh_token_user",
+        path="/"
+    )
     return {"message": "Logged out"}

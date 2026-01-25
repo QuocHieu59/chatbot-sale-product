@@ -30,6 +30,14 @@ def get_orders(request: OrderListRequest, db: Session = Depends(get_db)):
     except Exception as e:          
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/all")
+def get_orders(db: Session = Depends(get_db)):
+    try: 
+        query = db.query(Order)
+        orders = query.order_by(Order.created_at.desc()).all()
+        return {"success": True, "data": orders}
+    except Exception as e:          
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/delete")
 def delete_order(request: OrderDeleteRequest,db: Session = Depends(get_db)):
@@ -85,6 +93,9 @@ def update_order(
         # chỉ cho cập nhật 2 field này
         if request.username is not None:
             order.username = request.username
+        
+        if request.info is not None:
+            order.info =  request.info
 
         if request.customer_phone is not None:
             order.customer_phone = request.customer_phone

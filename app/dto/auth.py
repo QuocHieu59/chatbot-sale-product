@@ -28,3 +28,22 @@ class UserUpdate(BaseModel):
     password: str | None = None
     email: str | None = None
     role: str | None = None
+
+class ShopCreate(BaseModel):
+    name_shop: str
+    adress: str
+    wrk_hrs: str
+    link: str
+    inf_staff: str
+
+
+class ShopUpdate(BaseModel):
+    id: str
+    name_shop: str
+    adress: str
+    wrk_hrs: str
+    link: str
+    inf_staff: str
+
+class ShopId(BaseModel):
+    shop_id: str

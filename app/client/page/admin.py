@@ -2,6 +2,7 @@ import requests
 import streamlit as st
 
 from api_call import logout, get_username_by_id, get_agent_url
+from page.admin_shop import admin_shop_page
 
 APP_TITLE = "Trợ lý AI tư vấn"
 APP_ICON = "🤖"
@@ -44,7 +45,7 @@ def open_create_user_dialog():
     email = st.text_input("Email")
     password = st.text_input("Mật khẩu", type="password")
     role = st.selectbox("Quyền", ["user", "admin"])
-    age = st.number_input("Tuổi", min_value=0, max_value=100, step=1)
+    age = st.number_input("Tuổi", min_value=1, max_value=100, step=1)
     col1, col2 = st.columns(2)
 
     with col1:
@@ -93,14 +94,9 @@ def confirm_update_user(user_id, name, email, role, age):
 async def admin_user_page(controller, access_token_user):  
     username = get_username_by_id(access_token_user)[0]
     # print("User ID in order_user_page:", user_id)
-    if "thread_id" not in st.session_state:
-        thread_id = st.query_params.get("thread_id")
-        if not thread_id:
-            thread_id = ""
-            #thread_id = str(uuid.uuid4())
-        st.session_state.thread_id = thread_id
-
     # Sidebar
+    if "show_create_user" not in st.session_state:
+        st.session_state.show_create_user = False
     with st.sidebar:
         st.session_state.show_confirm_logout = False
         st.header(f"{APP_ICON} {APP_TITLE}")
@@ -112,8 +108,19 @@ async def admin_user_page(controller, access_token_user):
             if st.button(":material/logout: logout",key="logout_button", use_container_width=True):
                 confirm_logout(controller)
         st.write("Thông tin được AI hỗ trợ chỉ mang tính chất tham khảo")
-        if st.button(":material/home: Tạo mới người dùng", key="created_user", use_container_width=True):
+        if st.button(":material/person_add: Tạo mới người dùng", key="created_user", use_container_width=True):
             open_create_user_dialog()
+        if st.button(":material/store: Shop", key="btn_shop",  use_container_width=True):
+            st.query_params.page = "shop"
+            await admin_shop_page(controller, access_token_user)
+            st.rerun()
+        if st.button(":material/smartphone: Điện thoại", key="btn_phone", use_container_width=True):
+            st.query_params.page = "phone"
+            
+            st.rerun()
+        if st.button(":material/receipt_long: Đơn hàng", key="btn_admin_order",  use_container_width=True):
+            st.query_params.page = "admin_order"
+            
             st.rerun()
         with st.popover(":material/policy: Chính sách", use_container_width=True):
             st.write(
@@ -149,7 +156,7 @@ async def admin_user_page(controller, access_token_user):
     res = requests.get(f"{get_agent_url()}/users/admin/list", verify=False)
     result = res.json()
     # print("Order API result:", result)
-    if result["success"]:
+    if result["status"] == "success":
         user_list = result["data"] 
     else:
         user_list = []
@@ -159,7 +166,7 @@ async def admin_user_page(controller, access_token_user):
 
     if user_list:
         # Header bảng
-        header_cols = st.columns([1, 3, 2, 2, 2, 2])
+        header_cols = st.columns([1, 3, 3, 2, 1, 2])
         header_cols[0].markdown("**id**")
         header_cols[1].markdown("**email**")
         header_cols[2].markdown("**Tên**")
@@ -171,7 +178,7 @@ async def admin_user_page(controller, access_token_user):
 
         # Render từng đơn hàng
         for user in user_list:
-            cols = st.columns([1, 3, 2, 2, 3, 2])
+            cols = st.columns([1, 3, 3, 2, 1, 2])
 
             cols[0].write(str(user.get("id", ""))[:8])
             name = cols[1].text_input(
@@ -206,7 +213,7 @@ async def admin_user_page(controller, access_token_user):
                     if st.button(
                         ":material/edit:",
                         key=f"update_{user['id']}",
-                        help="Cập nhật đơn hàng"
+                        help="Cập nhật người dùng"
                     ):
                         confirm_update_user(
                             user["id"],
@@ -220,12 +227,9 @@ async def admin_user_page(controller, access_token_user):
                     if st.button(
                         ":material/delete:",
                         key=f"delete_{user['id']}",
-                        help="Xóa đơn hàng"
+                        help="Xóa người dùng"
                     ):
                         confirm_delete_user(user["id"])
                         #st.session_state.order_action = "delete"
                         
-
-    else:
-        st.info("📭 Bạn chưa có đơn hàng nào.")
     
