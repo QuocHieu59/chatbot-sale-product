@@ -50,8 +50,14 @@ async def display_messages(messages):
     for i, message in enumerate(messages):
         role = message.type
         content = message.content
-        clean_content = content.replace("\n\n", "\n")
+        content = message.content
+
+        if not any(keyword in content for keyword in ["bảng", "so sánh"]):
+            clean_content = content.replace("\n\n", "\n")
+        else:
+            clean_content = content
         #content_clean = normalize_markdown(content)
+        print("Message content:", clean_content)
         html_content = markdown.markdown(
         clean_content,
         extensions=["extra", "tables", "fenced_code"]
@@ -178,8 +184,8 @@ async def home_page(controller, access_token_user):
         st.session_state.user_input = ""
     if "visible_chat_count" not in st.session_state:
         st.session_state.visible_chat_count = 5
-    if "rewrite_ai" not in st.session_state:
-        st.session_state.rewrite_ai = OpenAI(api_key=OPENAI_KEY)
+    # if "rewrite_ai" not in st.session_state:
+    #     st.session_state.rewrite_ai = OpenAI(api_key=OPENAI_KEY)
     if "agent_client" not in st.session_state: 
         try:
             with st.spinner("Đang tải trang..."):
@@ -191,7 +197,7 @@ async def home_page(controller, access_token_user):
             st.stop()
     #print("hello")
     agent_client = st.session_state.agent_client
-    rewrite_ai = st.session_state.rewrite_ai
+    # rewrite_ai = st.session_state.rewrite_ai
     # print("AgentClient type59:", type(agent_client))
     # print("Has ainvoke:", hasattr(agent_client, "ainvoke"))
     if "thread_id" not in st.session_state:
@@ -281,7 +287,7 @@ async def home_page(controller, access_token_user):
     #end sidebar
     # message main content
     messages: list[ChatMessage] = st.session_state.messages
-    print("current messages:", messages)
+    #print("current messages:", messages)
     await display_messages(messages)
     if "loading" not in st.session_state:
         st.session_state.loading = False
@@ -312,9 +318,9 @@ async def home_page(controller, access_token_user):
             )
             session_response.raise_for_status()
             st.session_state.thread_id = session_response.json()["id"]
-            print("Tạo mới thread_id:", st.session_state.thread_id)
+            #print("Tạo mới thread_id:", st.session_state.thread_id)
         # Store user message in database
-        print("Gửi message với thread_id:")
+        #print("Gửi message với thread_id:")
         user_message_response = requests.post(
                 f"{get_agent_url()}/messages/messages",
                 json={

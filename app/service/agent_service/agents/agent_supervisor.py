@@ -8,10 +8,11 @@ from service.agent_service.agents.agent_shop import shop_information_agent
 from service.agent_service.agents.agent_product import product_agent
 from service.agent_service.agents.agent_order import order_agent
 from service.agent_service.agents.agent_suggest import suggest_agent
+from service.agent_service.agents.agent_question import rewrite_agent
 
 # Create supervisor agent
 workflow = create_supervisor(
-    agents=[shop_information_agent, product_agent, order_agent, suggest_agent],
+    agents=[shop_information_agent, product_agent, order_agent, suggest_agent, rewrite_agent],
     model=model,
     prompt=SUPERVISOR_PROMPT,
     add_handoff_back_messages=False,

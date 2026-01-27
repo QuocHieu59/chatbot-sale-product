@@ -79,8 +79,8 @@ def login(email, password, controller):
             max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
             path='/'
         )
-        access_token = controller.get('access_token_user')
-        print("Access token:", access_token)
+        #access_token = controller.get('access_token_user')
+        #print("Access token:", access_token)
         return role
     else:
         return ""

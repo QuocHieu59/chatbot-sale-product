@@ -40,7 +40,7 @@ def query_products(user_input: str) -> str:
             })
         print("list sản phẩm là", list_product)
         if len(list_product) > 0:
-                return f"Có {len(list_product)} sản phẩm phù hợp, bao gồm: {list_product}"
+                return f"List Product: {list_product}"
         else: 
                 return "Hiện tại hệ thống không có sản phẩm phù hợp"
     except requests.exceptions.RequestException as e:
@@ -59,8 +59,9 @@ def rag_context(query: str,  number: int = 3) -> Dict[str, any]:
     Returns:
     Dict[str, any]: Information on 3 phone products.
     """
-    print('----Product', query)
-    print("Số lượng kết quả tool:", number)
+    # print('----Product', query)
+    # print("Số lượng kết quả tool:", number)
+    print("Chạy vào rag_context với query:", query)
     search_result = []
     k = 1
     result = rag_context_ids(query, number)
@@ -69,7 +70,7 @@ def rag_context(query: str,  number: int = 3) -> Dict[str, any]:
         k += 1
         # print("-----")
         # print(i['information'])
-    print("Kết quả tìm kiếm:", search_result)
+    # print("Kết quả tìm kiếm:", search_result)
     return {
         "information relevant": search_result
     }
@@ -156,16 +157,17 @@ def rag_context_tool(query: str,  number: int = 1) -> list[str]:
     Returns:
         str: Thông tin 3 sản phẩm điện thoại.
     """
-    print('----Product', query)
-    print("Số lượng kết quả tool:", number)
+    # print('----Product', query)
+    # print("Số lượng kết quả tool:", number)
+    
     search_result = []
     k = 1
     result = rag_context_ids(query, number)
     for i in result:
         search_result.append(f"{k}): {i['information']}") 
         k += 1
-        print("-----")
-        print(i['information'])
+        # print("-----")
+        # print(i['information'])
     return search_result
 
 #print(rag_context('iPhone 14'))

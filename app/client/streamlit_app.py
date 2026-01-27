@@ -100,7 +100,7 @@ async def main() -> None:
         if current_page == "register":
             register_page()
         else:
-            print("No tokens found, redirecting to login page.")
+            #print("No tokens found, redirecting to login page.")
             login_page(controller)
 
         return
@@ -115,7 +115,7 @@ async def main() -> None:
                 controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, path='/')
     else:
         if not is_logging_out:
-            print("Setting cookies again to extend expiry.")
+            #print("Setting cookies again to extend expiry.")
             controller.set('access_token_user', access_token_user, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 4, path='/')
             controller.set('refresh_token_user', refresh_access_user, max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60, path='/')
             # controller.remove('access_token_user', path='/')
@@ -125,8 +125,8 @@ async def main() -> None:
     params = st.query_params
 
     current_page = params.get("page", "login")
-    print("Access token valid:", controller.get('access_token_user'))
-    print("Current page:", current_page)
+    # print("Access token valid:", controller.get('access_token_user'))
+    # print("Current page:", current_page)
     if current_page == "login":
         login_page(controller)
     elif current_page == "register":
