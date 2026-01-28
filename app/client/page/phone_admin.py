@@ -28,16 +28,16 @@ def confirm_logout(controller):
 @st.dialog("Xác nhận xóa điện thoại")
 def confirm_delete_phone(phone_id):
     st.write("Bạn có chắc muốn xóa điện thoại này không?")
-
+    #print("In confirm_delete_phone, phone_id:", phone_id)
     if st.button("✅ Xóa"):
             res = requests.delete(
-                f"{get_agent_url()}/phone/admin/delete",
-                json={"phone_id": phone_id},
+                f"{get_agent_url()}/product/delete",
+                json={"product_id": phone_id},
                 verify=False
             )
             if res.status_code == 200:
                 st.success("Điện thoại đã được xóa!")
-                st.session_state.need_reload = True
+                st.rerun()
             else:
                 st.error("Xóa điện thoại thất bại!")
             #st.rerun()
@@ -103,7 +103,9 @@ def open_create_phone_dialog():
 
             if res.status_code == 200:
                 st.success("Điện thoại đã được tạo!")
+                st.rerun()
                 st.session_state.need_reload = True
+                
             else:
                 st.error(f"Tạo điện thoại thất bại! {res.text}")
 
@@ -134,7 +136,9 @@ def confirm_update_phone(
 ):
     st.write("Bạn có chắc muốn cập nhật điện thoại này không?")
 
-
+    if (not name) or (not current_price) or (not color_options) or (not screen_size) or (not ram) or (not os) or (not chip) or (not memory) or (not pin) or (not phone_company):
+        st.error("Vui lòng điền đầy đủ thông tin trước khi cập nhật!")
+        return
     if st.button("✅ Cập nhật"):
             res = requests.put(
                 f"{get_agent_url()}/product/update",
@@ -160,6 +164,7 @@ def confirm_update_phone(
 
             if res.status_code == 200:
                 st.success("Điện thoại đã được cập nhật!")
+                st.rerun()
                 st.session_state.need_reload = True
             else:
                 st.error(f"Cập nhật điện thoại thất bại! {res.text}")
@@ -173,8 +178,12 @@ def confirm_update_phone(
 # ===================== PAGE =====================
 
 async def admin_phone_page(controller, access_token_user):
-    username = get_username_by_id(access_token_user)[0]
-    userrole = get_username_by_id(access_token_user)[2]
+    try:
+        username = get_username_by_id(access_token_user)[0]
+        userrole = get_username_by_id(access_token_user)[2]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        st.stop()
     if userrole != "admin":
         st.error("Bạn không có quyền truy cập trang này!")
         st.stop()
@@ -498,6 +507,7 @@ async def admin_phone_page(controller, access_token_user):
                         key=f"delete_{phone['id']}_{idx}",
                         help="Xóa điện thoại"
                     ):
+                    #print("Deleting phone ID:", phone["id"])
                     confirm_delete_phone(phone["id"])
                 st.markdown("</div>", unsafe_allow_html=True)
 

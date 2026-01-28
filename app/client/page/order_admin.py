@@ -61,6 +61,9 @@ def open_create_order_dialog():
 
 @st.dialog("Cập nhật đơn hàng")
 def confirm_update_order(order_id, username, customer_phone, customer_address, info):
+    if (not username) or (not customer_phone) or (not customer_address) or (not info):
+        st.error("Vui lòng điền đầy đủ thông tin trước khi cập nhật!")
+        return
     st.write("Bạn có chắc cập nhật đơn hàng này không?")
     col1, col2 = st.columns(2)
     with col1:
@@ -74,9 +77,9 @@ def confirm_update_order(order_id, username, customer_phone, customer_address, i
                         }, verify=False)
             if res.status_code == 200:
                 st.success("Đơn hàng đã được cập nhật!")
+                st.rerun()
             else:
                 st.error("Cập nhật đơn hàng thất bại!")
-            st.rerun()
     with col2:
         if st.button("❌ Hủy"):
             st.rerun()
@@ -90,16 +93,20 @@ def confirm_delete_order(order_id):
             res = requests.delete(f"{get_agent_url()}/orders/delete", json={"order_id": order_id}, verify=False)
             if res.status_code == 200:
                 st.success("Đơn hàng đã được xóa!")
+                st.rerun()
             else:
                 st.error("Xóa đơn hàng thất bại!")
-            st.rerun()
+            
     with col2:
         if st.button("❌ Hủy"):
             st.rerun()
 
 async def order_admin_page(controller, access_token_user):  
-    username = get_username_by_id(access_token_user)[0]
-    userrole = get_username_by_id(access_token_user)[2]
+    try:
+        username = get_username_by_id(access_token_user)[0]
+        userrole = get_username_by_id(access_token_user)[2]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
     if userrole != "admin":
         st.error("Bạn không có quyền truy cập trang này!")
         st.stop()

@@ -28,6 +28,9 @@ def confirm_logout(controller):
 @st.dialog("Cập nhật đơn hàng")
 def confirm_update_order(order_id, username, customer_phone, customer_address):
     st.write("Bạn có chắc cập nhật đơn hàng này không?")
+    if (not username) or (not customer_phone) or (not customer_address):
+        st.error("Vui lòng điền đầy đủ thông tin trước khi cập nhật!")
+        return
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ Cập nhật"):
@@ -62,9 +65,13 @@ def confirm_delete_order(order_id):
         if st.button("❌ Hủy"):
             st.rerun()
 
-async def order_user_page(controller, access_token_user):  
-    username = get_username_by_id(access_token_user)[0]
-    user_id = get_username_by_id(access_token_user)[1]
+async def order_user_page(controller, access_token_user):
+    try:
+        username = get_username_by_id(access_token_user)[0]
+        user_id = get_username_by_id(access_token_user)[1]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        st.stop()  
     # print("User ID in order_user_page:", user_id)
     if "thread_id" not in st.session_state:
         thread_id = st.query_params.get("thread_id")

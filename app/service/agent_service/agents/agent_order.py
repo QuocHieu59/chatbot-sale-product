@@ -32,24 +32,38 @@ def verify_product(name_product, memory, color):
         return "Vui lòng cung cấp đầy đủ thông tin tên sản phẩm, bộ nhớ và màu sắc để tôi có thể giúp bạn kiểm tra."
     try:
         product_info = f"{name_product}, Bộ nhớ: {memory}, Màu sắc: {color}"
-        info1 = rag_context_ids(product_info, 1)
-        # print("info1 là", info1[0]['id'])
+        info1 = rag_context_ids(product_info, 3)
+        #print("product_info là", product_info)
+        #print("state là", state)
+        #print("info1 3 to là", info1)
         # print("state.user_id là", state.user_id)
         # print("product_info là", product_info)
         #print("info1 là", info1[0]['information'])
-        info1_process = cutinfo(info1[0]['information'])
-        #print("info1_process là", info1_process)
+        results = []
+        print("memory là", memory)
+        for item in info1:
+            if memory.lower() in item["information"].lower():
+                results.append({
+                    "id": item["id"],
+                    "information": item["information"]
+                })
+                break
+        if(len(results) == 0):
+            return f"Không tìm thấy sản phẩm với bộ nhớ {memory}."
+        info1_process_1 = cutinfo(results[0]['information'])
+        # print("kết quả cuối cùng là:", results)
+        # print("info1_process là", info1_process_1)
     except Exception:
         info1 = None
-    print(is_in_stock(info1[0]['information']))
-    if is_in_stock(info1[0]['information']):
+    print(is_in_stock(results[0]['information']))
+    if is_in_stock(results[0]['information']):
         return f" Hiện tại điện thoại bạn chọn đã hết hàng"
     else:
         response = client.chat.completions.create(
             model=Model_highcost, 
             messages=[
                 {"role": "system", "content": "Bạn là một chuyên gia kiểm tra so khớp sản phẩm điện thoại."},
-                {"role": "user", "content": product_prompt_verify(product_info, info1_process)}
+                {"role": "user", "content": product_prompt_verify(product_info, info1_process_1)}
             ],
             temperature=0 
             )
@@ -59,8 +73,8 @@ def verify_product(name_product, memory, color):
         if "yes" not in result.lower():
             return f"Rất tiếc, cửa hàng chúng tôi không có sản phẩm điện thoại với thông tin bạn cung cấp. do {result}"
         else:
-            product = extract_product_info(info1[0]['information'])
-            print(product_info)
+            product = extract_product_info(results[0]['information'])
+            #print(product_info)
             return f"Sản phẩm bạn muốn đặt là {product['name']} với giá {product['price']}, bộ nhớ {product['memory']}, và màu {color}. Bạn có muốn đặt mua sản phẩm này không?"
   
 def order_product(name_product, memory, color, phone_number, address, state: OrderState):
@@ -72,17 +86,26 @@ def order_product(name_product, memory, color, phone_number, address, state: Ord
     # info1 = rag_context(product_information, 1)
     # product = extract_product_info(info1)
     product_info = f"{name_product}, Bộ nhớ: {memory}, Màu sắc: {color}"
-    info1 = rag_context_ids(product_info, 1)
+    info1 = rag_context_ids(product_info, 3)
+    results = []
+    for item in info1:
+        if memory.lower() in item["information"].lower():
+                results.append({
+                    "id": item["id"],
+                    "information": item["information"]
+                })
+                break
     state.product_name = product_info
-    state.id_product = info1[0]['id']
+    state.id_product = results[0]['id']
     state.color = color.lower()
     state.customer_phone = phone_number
     state.customer_address = address
+    
     if state.product_name and state.customer_phone and state.customer_address and state.id_product and state.color:
-        print("chạy vào hàm này chưa")
+        #print("chạy vào hàm này chưa")
         user_id = current_user_id.get()
-        print("user_id trong verify_product là", user_id)
-        print(state.product_name)
+        #print("user_id trong verify_product là", user_id)
+        #print(state.product_name)
         orders_endpoint = f"{URL}/orders"
         order_data = {
             "id_phone": state.id_product,

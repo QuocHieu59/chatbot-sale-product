@@ -73,9 +73,6 @@ def create_product(
             sale=request.sale,
             status=request.status,
             phone_company=request.phone_company,
-            url=request.url,
-            product_specs=request.product_specs,
-            product_promotion=request.product_promotion,
         )
 
         db.add(product)
@@ -185,7 +182,7 @@ def delete_product(
 ):
     try:
         product_id = uuid.UUID(request.product_id)
-
+        #print("Deleting product ID:", product_id)
         product = (
             db.query(Product)
             .filter(Product.id == product_id)

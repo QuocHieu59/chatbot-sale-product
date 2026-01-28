@@ -20,7 +20,7 @@ def suggest_tool(phone_company, price_range, demand):
     print("price_range là", price_range)
     print("demand là", demand)
     list_product = []
-    user_input = f" Điện thoại của hãng {phone_company} với mức giá lớn hơn {price_range - 5000000} và nhỏ hơn {price_range + 5000000}."
+    user_input = f" Điện thoại của hãng {phone_company} với mức giá {price_range}"
     data = query_phone(user_input)
     # print("data lấy từ query_phone là", data)
     for product in data.get("data", []):

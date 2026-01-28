@@ -162,7 +162,7 @@ def logout(controller):
 def get_username_by_id(access_token_user):
     #print("Fetching user data with access token:", access_token_user)
     if not access_token_user:
-        st.error("No access token provided.")
+        #st.error("No access token provided.")
         return None
     headers = {"Authorization": f"Bearer {access_token_user}"}
     res = requests.get(f"{get_agent_url()}/auth/me", headers=headers, verify=False)

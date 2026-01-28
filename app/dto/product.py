@@ -17,9 +17,9 @@ class ProductCreateRequest(BaseModel):
     sale: Optional[float] = 0.0
     status: Optional[bool] = True
     phone_company: str
-    url: str
-    product_specs: str
-    product_promotion: str
+    url: Optional[str] = "Không có"
+    product_specs: Optional[str] = "Không có"
+    product_promotion: Optional[str] = "Không có"
 
 
 class ProductUpdateRequest(BaseModel):

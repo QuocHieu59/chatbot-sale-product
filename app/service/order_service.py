@@ -13,7 +13,7 @@ def order_service(db: Session, id_phone: str, id_user: str, customer_phone: str,
     if not user:
         raise BusinessException("User does not exist")
     result = color_product(db=db, product_id=id_phone, selected_color=color)
-    print("result từ color_product:", result)
+    #print("result từ color_product:", result)
     if result['status'] == "error":
         raise BusinessException(str(result['message']))
     else:

@@ -76,6 +76,9 @@ def open_create_user_dialog():
 @st.dialog("Cập nhật người dùng")
 def confirm_update_user(user_id, name, email, role, age):
     st.write("Bạn có chắc cập nhật người dùng này không?")
+    if (not name) or (not email) or (not role) or (not age):
+        st.error("Vui lòng điền đầy đủ thông tin trước khi cập nhật!")
+        return
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ Cập nhật"):
@@ -96,8 +99,13 @@ def confirm_update_user(user_id, name, email, role, age):
             st.rerun()
 
 async def admin_user_page(controller, access_token_user):  
-    username = get_username_by_id(access_token_user)[0]
-    userrole = get_username_by_id(access_token_user)[2]
+    try:
+        username = get_username_by_id(access_token_user)[0]
+        userrole = get_username_by_id(access_token_user)[2]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        st.stop()
+    #print("User role in admin_user_page:", userrole)
     if userrole != "admin":
         st.error("Bạn không có quyền truy cập trang này!")
         st.stop()

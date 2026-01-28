@@ -57,7 +57,7 @@ async def display_messages(messages):
         else:
             clean_content = content
         #content_clean = normalize_markdown(content)
-        print("Message content:", clean_content)
+        #print("Message content:", clean_content)
         html_content = markdown.markdown(
         clean_content,
         extensions=["extra", "tables", "fenced_code"]
@@ -174,9 +174,13 @@ def confirm_logout(controller):
         if st.button("❌ Hủy"):
             st.rerun()
 
-async def home_page(controller, access_token_user):   
-    username = get_username_by_id(access_token_user)[0]
-    user_id = get_username_by_id(access_token_user)[1]
+async def home_page(controller, access_token_user):
+    try:   
+        username = get_username_by_id(access_token_user)[0]
+        user_id = get_username_by_id(access_token_user)[1]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        st.stop()
     agent_url = get_agent_url()
     if "messages" not in st.session_state:
         st.session_state.messages = []

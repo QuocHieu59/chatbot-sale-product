@@ -93,6 +93,9 @@ def open_create_shop_dialog():
 @st.dialog("Cập nhật shop")
 def confirm_update_shop(shop_id, name_shop, address, wrk_hrs, link, inf_staff):
     st.write("Bạn có chắc muốn cập nhật shop này không?")
+    if (not name_shop) or (not address) or (not wrk_hrs) or (not link) or (not inf_staff):
+        st.error("Vui lòng điền đầy đủ thông tin trước khi cập nhật!")
+        return
     col1, col2 = st.columns(2)
 
     with col1:
@@ -125,8 +128,12 @@ def confirm_update_shop(shop_id, name_shop, address, wrk_hrs, link, inf_staff):
 # ===================== PAGE =====================
 
 async def admin_shop_page(controller, access_token_user):
-    username = get_username_by_id(access_token_user)[0]
-    userrole = get_username_by_id(access_token_user)[2]
+    try:
+        username = get_username_by_id(access_token_user)[0]
+        userrole = get_username_by_id(access_token_user)[2]
+    except Exception:
+        st.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        st.stop()
     if userrole != "admin":
         st.error("Bạn không có quyền truy cập trang này!")
         st.stop()

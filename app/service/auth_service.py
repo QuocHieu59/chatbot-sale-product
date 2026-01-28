@@ -46,4 +46,4 @@ def get_me_service(db: Session, token: str):
     existing_user = get_user_by_id(db, user_id)
     if not existing_user:
         raise BusinessException("User not found")
-    return {"id": existing_user.id, "email": existing_user.email, "name": existing_user.name}
+    return {"id": existing_user.id, "email": existing_user.email, "name": existing_user.name, "role": existing_user.role}

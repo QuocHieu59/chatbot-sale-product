@@ -50,7 +50,7 @@ def get_me(authorization: str = Header(None), db: Session = Depends(get_db)):
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Unauthorized")
         token = authorization.split(" ")[1]
-        print(token)
+        #print(token)
         if not token:
             return {"logged_in": False}
         result = get_me_service(db, token)
